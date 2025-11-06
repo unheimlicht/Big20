@@ -1,145 +1,232 @@
+<!-- Big20 Dart Trainer v2.9 – Voice Active -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Big 20 — Vorschau v2.9</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>| Big20</title>
 <style>
-  :root{--bg:#f5f7fb;--card:#fff;--text:#111;--muted:#666;--green:#1fa64a;--red:#e53935;--light-green:#dff6e8;--light-pink:#ffe9ec}
-  [data-theme="dark"]{--bg:#0b0c0d;--card:#121416;--text:#efefef;--muted:#bfc6cb}
-  [data-theme="voice"]{--bg:#000;--card:#000;--text:#fff}
-  body{margin:0;padding:18px;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text)}
-  h1{text-align:center;margin:8px 0 12px}
-  .scoreboard{display:flex;justify-content:space-between;align-items:center;background:var(--card);padding:12px;border-radius:12px;max-width:980px;margin:0 auto 12px}
-  #restBig{font-weight:900;font-size:44px;color:var(--green);text-align:center}
-  .board{display:flex;justify-content:center;gap:20px;max-width:980px;margin:10px auto}
-  .col{display:flex;flex-direction:column;gap:10px}
-  .btn{width:180px;padding:14px;border-radius:10px;border:0;color:#fff;font-size:16px;cursor:pointer}
-  .g{background:var(--green)} .r{background:var(--red)}
-  .g.disabled{background:var(--light-green);color:var(--text);opacity:0.95}
-  .r.disabled{background:var(--light-pink);color:var(--text);opacity:0.95}
-  #gear{position:fixed;left:14px;bottom:14px;width:48px;height:48px;border-radius:10px;background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer}
-  #iconDart{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;width:48px;height:48px;border-radius:10px;background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer}
-  #newGame{position:fixed;right:14px;bottom:14px;padding:12px 18px;border-radius:30px;background:var(--red);color:#fff;border:0;cursor:pointer}
-  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;padding:12px}
-  .modal{width:100%;max-width:720px;background:var(--card);border-radius:12px;padding:16px;color:var(--text)}
-  .sound-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-  .sound-sample{padding:8px 12px;border-radius:8px;background:#eef4ff;border:1px solid #d7e8ff;cursor:pointer;text-align:center}
-  #infoBox{position:fixed;left:50%;transform:translateX(-50%);bottom:74px;background:rgba(0,0,0,0.88);color:#fff;padding:12px 14px;border-radius:10px;max-width:90%;text-align:center;display:none}
-  .voice-only .board{display:none} .voice-only #restBig{font-size:80px}
+:root {
+  --green: #47d147;
+  --red: #ff4d4d;
+  --bg-dark: #111;
+  --bg-light: #f4f4f4;
+  --text-dark: #fff;
+  --text-light: #000;
+}
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  background: var(--bg-light);
+  color: var(--text-light);
+}
+body.dark {
+  background: var(--bg-dark);
+  color: var(--text-dark);
+}
+h1 {
+  margin-top: 10px;
+}
+.score, .hit-rate, .quality {
+  margin: 8px auto;
+  font-size: 1.3em;
+}
+.rest {
+  font-size: 2.2em;
+  font-weight: bold;
+  color: green;
+}
+.buttons {
+  display: flex;
+  justify-content: space-evenly;
+  margin: 20px auto;
+  width: 90%;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+button {
+  padding: 15px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.2em;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.2s, filter 0.2s;
+}
+button:disabled {
+  filter: brightness(150%);
+  cursor: not-allowed;
+}
+.green { background-color: var(--green); }
+.red { background-color: var(--red); }
+.settings, .new-game {
+  position: fixed;
+  bottom: 15px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1em;
+  color: white;
+  cursor: pointer;
+}
+.settings { left: 15px; background-color: #555; }
+.new-game { right: 15px; background-color: #888; }
+#infoIcon {
+  position: fixed;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 24px;
+  cursor: pointer;
+}
+#infoText {
+  display: none;
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.8);
+  color: white;
+  padding: 15px;
+  border-radius: 10px;
+  width: 80%;
+}
+.version {
+  position: fixed;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.8em;
+  color: gray;
+}
+.quality span {
+  font-size: 1.4em;
+  font-weight: bold;
+}
+.quality.green { color: #47d147; }
+.quality.red { color: #ff4d4d; }
 </style>
 </head>
 <body>
-<h1>Big 20 — Vorschau (v2.9)</h1>
-<div class="scoreboard">
-  <div><div style="font-size:13px;color:var(--muted)">Restpunkte</div><div id="restBig">301</div><div id="restSuggestion" style="font-size:13px;color:var(--muted)"></div></div>
-  <div style="text-align:right"><div style="font-size:13px;color:var(--muted)">Treffer</div><div id="hitSummary">0 von 0</div><div id="status" style="font-size:13px;color:var(--muted)"></div></div>
-</div>
+<h1>| Big20</h1>
 
-<div id="board" class="board" aria-live="polite">
-  <div class="col" id="leftCol">
-    <button class="btn g" id="btnT" data-val="60">Triple-20</button>
-    <button class="btn r" id="btnD" data-val="40">Doppel-20</button>
-    <button class="btn g" id="btnS" data-val="20">Single-20</button>
+<div class="score">Punkte: <span id="score">301</span></div>
+<div class="hit-rate">Treffer: <span id="hits">0</span> von <span id="throws">0</span></div>
+<div class="rest">Rest: <span id="rest">301</span></div>
+<div class="quality" id="qualityDisplay">Wurfqualität gesamt: <span id="qualityScore">0%</span></div>
+
+<div class="buttons">
+  <div class="col left">
+    <button class="red" onclick="registerThrow(60)">Triple-20</button>
+    <button class="green" onclick="registerThrow(40)">Doppel-20</button>
+    <button class="red" onclick="registerThrow(20)">Single-20</button>
   </div>
-  <div class="col" id="rightCol">
-    <button class="btn r" id="btnBE" data-val="50">Bulls Eye</button>
-    <button class="btn g" id="btnB" data-val="25">Bull</button>
-    <button class="btn r" id="btn0" data-val="0">Null</button>
-  </div>
-</div>
-
-<div style="max-width:980px;margin:12px auto;text-align:center">
-  <div style="font-size:13px;color:var(--muted)">Zuletzt geworfen</div>
-  <div id="recentVals" style="font-weight:700;font-size:18px;min-height:22px;opacity:0;transition:opacity .3s"></div>
-  <div style="margin-top:10px;font-weight:800">Wurfqualitaet gesamt</div>
-  <div id="qualityVal" style="font-size:20px;margin-top:6px">–</div>
-  <div id="voiceStatus" style="font-size:13px;color:var(--muted);margin-top:8px">Sprache: aus</div>
-</div>
-
-<div id="gear" title="Einstellungen">⚙</div>
-<div id="iconDart" title="Big 20">🎯</div>
-<button id="newGame">Neues Spiel</button>
-
-<div id="infoBox"><div style="font-weight:800;margin-bottom:8px">Big 20 — Dart-Training</div>Es werden nur Würfe mit 20 gewertet: Single-, Doppel-, Triple-20, sowie Bull und Bulls Eye.<br>Alle anderen Würfe zählen Null.</div>
-
-<div class="modal-bg" id="modalBg">
-  <div class="modal">
-    <h2>Einstellungen</h2>
-    <div style="display:flex;gap:18px;flex-wrap:wrap">
-      <div style="flex:1;min-width:240px">
-        <label><input type="checkbox" id="toggleDark"> Dunkelmodus</label>
-        <div style="margin-top:8px">
-          <div style="font-weight:600;margin-bottom:6px">Sound-Test</div>
-          <div class="sound-grid" id="soundList"></div>
-        </div>
-      </div>
-      <div style="flex:1;min-width:240px">
-        <div style="font-weight:600;margin-bottom:6px">Sound-Zuweisungen</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div>Single-20 <select id="selSingle"></select></div>
-          <div>Doppel-20 <select id="selDouble"></select></div>
-          <div>Triple-20 <select id="selTriple"></select></div>
-          <div>Bull <select id="selBull"></select></div>
-          <div>Bulls Eye <select id="selBE"></select></div>
-          <div>Null <select id="selZero"></select></div>
-        </div>
-        <div style="margin-top:8px">
-          <label>Anzeige-Modus:
-            <select id="viewMode"><option value="light">Helle Anzeige</option><option value="dark">Dunkelmodus</option><option value="voice">Nur Sprache (Voice-only)</option></select>
-          </label>
-        </div>
-        <div style="margin-top:8px"><label><input type="checkbox" id="preventSleep"> Display-Timeout verhindern</label></div>
-        <div style="margin-top:8px"><label><input type="checkbox" id="voiceToggle"> Sprachsteuerung aktivieren</label><div style="font-size:13px;color:var(--muted)">Spracheingabe startet mit "Plus" (Deutsch).</div></div>
-      </div>
-    </div>
-    <div style="text-align:right;margin-top:12px"><button id="saveSettings" style="background:#2979ff;color:#fff;padding:8px 12px;border-radius:8px">Speichern</button><button id="closeSettings" style="margin-left:8px;padding:8px 12px;border-radius:8px">Schliessen</button></div>
+  <div class="col right">
+    <button class="green" onclick="registerThrow(50)">Bulls Eye</button>
+    <button class="red" onclick="registerThrow(25)">Bull</button>
+    <button class="green" onclick="registerThrow(0)">Null</button>
   </div>
 </div>
+<div id="infoIcon">🎯</div>
+<div id="infoText">
+  <h3>Big20 Dart-Training</h3>
+  <p>Es werden nur Würfe mit 20 gewertet (Single, Doppel, Triple-20) sowie Bull (25) und Bulls Eye (50). Alle anderen Würfe zählen 0.</p>
+</div>
+
+<button class="settings" onclick="openSettings()">⚙️</button>
+<button class="new-game" onclick="newGame()">Neues Spiel</button>
+<div class="version">v 2.9</div>
 
 <script>
-let score=301, throws=0, hits=0, recent=[], roundThrows=0, locked=false, pauseTimer=null;
-const restBigEl = document.getElementById('restBig');
-const restSuggestion = document.getElementById('restSuggestion');
-const hitSummary = document.getElementById('hitSummary');
-const recentVals = document.getElementById('recentVals');
-const qualityVal = document.getElementById('qualityVal');
-const voiceStatus = document.getElementById('voiceStatus');
-const modalBg = document.getElementById('modalBg');
-const gear = document.getElementById('gear');
-const iconDart = document.getElementById('iconDart');
-const infoBox = document.getElementById('infoBox');
-const preventSleep = document.getElementById('preventSleep');
+let rest = 301;
+let hits = 0;
+let throws = 0;
+let totalQuality = 0;
 
-function updateSuggestion(){
-  if(score>59){ restSuggestion.textContent = 'Vorschlag: normale 20er/ Bull/ Bulls Eye (kein Checkout)'; return; }
-  if(score>20){ const bases=[60,40,20]; let chosen=20; for(let b of bases){ if(b<=score){ chosen=b; break; } } const rest=score-chosen; let label = chosen===60?'Triple-20':(chosen===40?'Doppel-20':'Single-20'); restSuggestion.textContent = `Vorschlag: ${label} → ${chosen} Punkte, verbleibend: ${rest}`; } else restSuggestion.textContent='';
+// Soundbank
+const sounds = {
+  single: new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"),
+  miss: new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"),
+  bull: new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"),
+  bullseye: new Audio("https://actions.google.com/sounds/v1/alarms/bugle_tune.ogg")
+};
+
+function playSound(name, repeat=1) {
+  for (let i=0; i<repeat; i++) {
+    const snd = sounds[name].cloneNode();
+    setTimeout(()=>snd.play(), i*180);
+  }
 }
 
-function updateUI(){ restBigEl.textContent = score; updateSuggestion(); hitSummary.textContent = `${hits} von ${throws}`; const q = (301-score)/(throws||1)/60*100; if(throws===0) qualityVal.textContent='–'; else qualityVal.textContent = Math.min(120,q).toFixed(1)+' %'; if(score<=0){ document.querySelectorAll('.btn').forEach(b=> b.style.display='none'); } }
+function registerThrow(points) {
+  if (rest <= 0) return;
+  throws++;
 
-function lockForPause(){ locked=true; document.querySelectorAll('.btn').forEach(b=> b.disabled=true); document.querySelectorAll('.g').forEach(el=> el.classList.add('disabled')); document.querySelectorAll('.r').forEach(el=> el.classList.add('disabled')); if(pauseTimer) clearTimeout(pauseTimer); pauseTimer = setTimeout(()=>{ locked=false; document.querySelectorAll('.btn').forEach(b=> b.disabled=false); document.querySelectorAll('.g').forEach(el=> el.classList.remove('disabled')); document.querySelectorAll('.r').forEach(el=> el.classList.remove('disabled')); roundThrows=0; },10000); }
+  if (points > 0) hits++;
 
-function applyThrow(points,label,action){ if(locked||score<=0) return; throws++; roundThrows++; if(points>0 && points<=score) hits++; if(points>score){ document.getElementById('status').textContent='ueberworfen!'; lockForPause(); return; } score -= points; recent.unshift(label); if(recent.length>3) recent.pop(); recentVals.textContent = recent.join(', '); recentVals.style.opacity=1; setTimeout(()=> recentVals.style.opacity=0,10000); updateUI(); if(score>0 && score<60){ setTimeout(()=> showCheckoutOptions(),120); return; } if(roundThrows>=3) lockForPause(); }
+  let qualityNow = (points / 60) * 100;
+  totalQuality += qualityNow;
+  let avgQuality = (totalQuality / throws).toFixed(1);
 
-function showCheckoutOptions(){ const board=document.getElementById('board'); board.innerHTML=''; const col=document.createElement('div'); col.className='col'; const b0=document.createElement('button'); b0.className='btn r'; b0.textContent='Null'; b0.onclick=()=>applyThrow(0,'Null'); col.appendChild(b0); const bex=document.createElement('button'); bex.className='btn g'; bex.textContent=String(score); bex.onclick=()=>applyThrow(score,String(score)); col.appendChild(bex); for(let s=1;s<=20;s++){ if(3*s===score){ const bt=document.createElement('button'); bt.className='btn g'; bt.textContent='Triple '+s; bt.onclick=(()=>applyThrow(3*s,'Triple '+s)); col.appendChild(bt);} if(2*s===score){ const bd=document.createElement('button'); bd.className='btn r'; bd.textContent='Doppel '+s; bd.onclick=(()=>applyThrow(2*s,'Doppel '+s)); col.appendChild(bd);} } board.appendChild(col); }
+  document.getElementById("qualityScore").textContent = avgQuality + "%";
+  document.getElementById("qualityDisplay").className =
+      "quality " + (avgQuality >= 50 ? "green" : "red");
 
-document.getElementById('btnT').addEventListener('click', ()=> applyThrow(60,'Triple-20'));
-document.getElementById('btnD').addEventListener('click', ()=> applyThrow(40,'Doppel-20'));
-document.getElementById('btnS').addEventListener('click', ()=> applyThrow(20,'Single-20'));
-document.getElementById('btnBE').addEventListener('click', ()=> applyThrow(50,'Bulls Eye'));
-document.getElementById('btnB').addEventListener('click', ()=> applyThrow(25,'Bull'));
-document.getElementById('btn0').addEventListener('click', ()=> applyThrow(0,'Null'));
+  // Soundauswahl
+  if (points === 0) playSound("miss");
+  else if (points === 20) playSound("single");
+  else if (points === 40) playSound("single", 2);
+  else if (points === 60) playSound("single", 3);
+  else if (points === 25) playSound("bull");
+  else if (points === 50) playSound("bullseye");
 
-document.getElementById('newGame').addEventListener('click', ()=> { score=301; throws=0; hits=0; recent=[]; roundThrows=0; locked=false; location.reload(); });
+  rest -= points;
+  if (rest < 0) rest = 0;
+  document.getElementById("rest").textContent = rest;
+  document.getElementById("score").textContent = rest;
+  document.getElementById("hits").textContent = hits;
+  document.getElementById("throws").textContent = throws;
 
-gear.addEventListener('click', ()=> modalBg.style.display='flex');
-document.getElementById('closeSettings').addEventListener('click', ()=> modalBg.style.display='none');
-document.getElementById('saveSettings').addEventListener('click', ()=>{ if(document.getElementById('toggleDark').checked) document.documentElement.setAttribute('data-theme','dark'); else document.documentElement.removeAttribute('data-theme'); const vm=document.getElementById('viewMode').value; if(vm==='voice'){ document.documentElement.setAttribute('data-theme','voice'); document.documentElement.classList.add('voice-only'); } else { document.documentElement.classList.remove('voice-only'); } if(document.getElementById('preventSleep').checked){ try{ navigator.wakeLock && navigator.wakeLock.request('screen'); }catch(e){} } modalBg.style.display='none'; updateUI(); });
+  if (rest === 0) endGame();
+}
 
-iconDart.addEventListener('pointerdown', ()=>{ infoBox.style.display='block'; setTimeout(()=> infoBox.style.display='none',3000); });
+function endGame() {
+  document.getElementById("qualityDisplay").innerHTML += "<br><b>Spielende!</b>";
+  document.querySelectorAll("button").forEach(btn => btn.disabled = true);
+}
 
-updateUI();
+function newGame() {
+  rest = 301; hits = 0; throws = 0; totalQuality = 0;
+  document.getElementById("rest").textContent = rest;
+  document.getElementById("score").textContent = rest;
+  document.getElementById("hits").textContent = hits;
+  document.getElementById("throws").textContent = throws;
+  document.getElementById("qualityScore").textContent = "0%";
+  document.getElementById("qualityDisplay").className = "quality red";
+  document.getElementById("qualityDisplay").innerHTML =
+    'Wurfqualität gesamt: <span id="qualityScore">0%</span>';
+  document.querySelectorAll("button").forEach(btn => btn.disabled = false);
+}
+
+// Info-Icon-Funktion
+const infoIcon = document.getElementById("infoIcon");
+const infoText = document.getElementById("infoText");
+infoIcon.addEventListener("touchstart", showInfo);
+infoIcon.addEventListener("mousedown", showInfo);
+function showInfo() {
+  infoText.style.display = "block";
+  setTimeout(() => infoText.style.display = "none", 3500);
+}
+
+// Einstellungen-Platzhalter
+function openSettings() {
+  alert("Einstellungen kommen in Version 3.0 – Voice Mode, Farbwahl & Timeout.");
+}
 </script>
 </body>
 </html>
