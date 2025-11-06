@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Big 20 — Vorschau v2.9</title>
+<style>
+  :root{--bg:#f5f7fb;--card:#fff;--text:#111;--muted:#666;--green:#1fa64a;--red:#e53935;--light-green:#dff6e8;--light-pink:#ffe9ec}
+  [data-theme="dark"]{--bg:#0b0c0d;--card:#121416;--text:#efefef;--muted:#bfc6cb}
+  [data-theme="voice"]{--bg:#000;--card:#000;--text:#fff}
+  body{margin:0;padding:18px;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text)}
+  h1{text-align:center;margin:8px 0 12px}
+  .scoreboard{display:flex;justify-content:space-between;align-items:center;background:var(--card);padding:12px;border-radius:12px;max-width:980px;margin:0 auto 12px}
+  #restBig{font-weight:900;font-size:44px;color:var(--green);text-align:center}
+  .board{display:flex;justify-content:center;gap:20px;max-width:980px;margin:10px auto}
+  .col{display:flex;flex-direction:column;gap:10px}
+  .btn{width:180px;padding:14px;border-radius:10px;border:0;color:#fff;font-size:16px;cursor:pointer}
+  .g{background:var(--green)} .r{background:var(--red)}
+  .g.disabled{background:var(--light-green);color:var(--text);opacity:0.95}
+  .r.disabled{background:var(--light-pink);color:var(--text);opacity:0.95}
+  #gear{position:fixed;left:14px;bottom:14px;width:48px;height:48px;border-radius:10px;background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer}
+  #iconDart{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;width:48px;height:48px;border-radius:10px;background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer}
+  #newGame{position:fixed;right:14px;bottom:14px;padding:12px 18px;border-radius:30px;background:var(--red);color:#fff;border:0;cursor:pointer}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center;padding:12px}
+  .modal{width:100%;max-width:720px;background:var(--card);border-radius:12px;padding:16px;color:var(--text)}
+  .sound-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+  .sound-sample{padding:8px 12px;border-radius:8px;background:#eef4ff;border:1px solid #d7e8ff;cursor:pointer;text-align:center}
+  #infoBox{position:fixed;left:50%;transform:translateX(-50%);bottom:74px;background:rgba(0,0,0,0.88);color:#fff;padding:12px 14px;border-radius:10px;max-width:90%;text-align:center;display:none}
+  .voice-only .board{display:none} .voice-only #restBig{font-size:80px}
+</style>
+</head>
+<body>
+<h1>Big 20 — Vorschau (v2.9)</h1>
+<div class="scoreboard">
+  <div><div style="font-size:13px;color:var(--muted)">Restpunkte</div><div id="restBig">301</div><div id="restSuggestion" style="font-size:13px;color:var(--muted)"></div></div>
+  <div style="text-align:right"><div style="font-size:13px;color:var(--muted)">Treffer</div><div id="hitSummary">0 von 0</div><div id="status" style="font-size:13px;color:var(--muted)"></div></div>
+</div>
+
+<div id="board" class="board" aria-live="polite">
+  <div class="col" id="leftCol">
+    <button class="btn g" id="btnT" data-val="60">Triple-20</button>
+    <button class="btn r" id="btnD" data-val="40">Doppel-20</button>
+    <button class="btn g" id="btnS" data-val="20">Single-20</button>
+  </div>
+  <div class="col" id="rightCol">
+    <button class="btn r" id="btnBE" data-val="50">Bulls Eye</button>
+    <button class="btn g" id="btnB" data-val="25">Bull</button>
+    <button class="btn r" id="btn0" data-val="0">Null</button>
+  </div>
+</div>
+
+<div style="max-width:980px;margin:12px auto;text-align:center">
+  <div style="font-size:13px;color:var(--muted)">Zuletzt geworfen</div>
+  <div id="recentVals" style="font-weight:700;font-size:18px;min-height:22px;opacity:0;transition:opacity .3s"></div>
+  <div style="margin-top:10px;font-weight:800">Wurfqualitaet gesamt</div>
+  <div id="qualityVal" style="font-size:20px;margin-top:6px">–</div>
+  <div id="voiceStatus" style="font-size:13px;color:var(--muted);margin-top:8px">Sprache: aus</div>
+</div>
+
+<div id="gear" title="Einstellungen">⚙</div>
+<div id="iconDart" title="Big 20">🎯</div>
+<button id="newGame">Neues Spiel</button>
+
+<div id="infoBox"><div style="font-weight:800;margin-bottom:8px">Big 20 — Dart-Training</div>Es werden nur Würfe mit 20 gewertet: Single-, Doppel-, Triple-20, sowie Bull und Bulls Eye.<br>Alle anderen Würfe zählen Null.</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h2>Einstellungen</h2>
+    <div style="display:flex;gap:18px;flex-wrap:wrap">
+      <div style="flex:1;min-width:240px">
+        <label><input type="checkbox" id="toggleDark"> Dunkelmodus</label>
+        <div style="margin-top:8px">
+          <div style="font-weight:600;margin-bottom:6px">Sound-Test</div>
+          <div class="sound-grid" id="soundList"></div>
+        </div>
+      </div>
+      <div style="flex:1;min-width:240px">
+        <div style="font-weight:600;margin-bottom:6px">Sound-Zuweisungen</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>Single-20 <select id="selSingle"></select></div>
+          <div>Doppel-20 <select id="selDouble"></select></div>
+          <div>Triple-20 <select id="selTriple"></select></div>
+          <div>Bull <select id="selBull"></select></div>
+          <div>Bulls Eye <select id="selBE"></select></div>
+          <div>Null <select id="selZero"></select></div>
+        </div>
+        <div style="margin-top:8px">
+          <label>Anzeige-Modus:
+            <select id="viewMode"><option value="light">Helle Anzeige</option><option value="dark">Dunkelmodus</option><option value="voice">Nur Sprache (Voice-only)</option></select>
+          </label>
+        </div>
+        <div style="margin-top:8px"><label><input type="checkbox" id="preventSleep"> Display-Timeout verhindern</label></div>
+        <div style="margin-top:8px"><label><input type="checkbox" id="voiceToggle"> Sprachsteuerung aktivieren</label><div style="font-size:13px;color:var(--muted)">Spracheingabe startet mit "Plus" (Deutsch).</div></div>
+      </div>
+    </div>
+    <div style="text-align:right;margin-top:12px"><button id="saveSettings" style="background:#2979ff;color:#fff;padding:8px 12px;border-radius:8px">Speichern</button><button id="closeSettings" style="margin-left:8px;padding:8px 12px;border-radius:8px">Schliessen</button></div>
+  </div>
+</div>
+
+<script>
+let score=301, throws=0, hits=0, recent=[], roundThrows=0, locked=false, pauseTimer=null;
+const restBigEl = document.getElementById('restBig');
+const restSuggestion = document.getElementById('restSuggestion');
+const hitSummary = document.getElementById('hitSummary');
+const recentVals = document.getElementById('recentVals');
+const qualityVal = document.getElementById('qualityVal');
+const voiceStatus = document.getElementById('voiceStatus');
+const modalBg = document.getElementById('modalBg');
+const gear = document.getElementById('gear');
+const iconDart = document.getElementById('iconDart');
+const infoBox = document.getElementById('infoBox');
+const preventSleep = document.getElementById('preventSleep');
+
+function updateSuggestion(){
+  if(score>59){ restSuggestion.textContent = 'Vorschlag: normale 20er/ Bull/ Bulls Eye (kein Checkout)'; return; }
+  if(score>20){ const bases=[60,40,20]; let chosen=20; for(let b of bases){ if(b<=score){ chosen=b; break; } } const rest=score-chosen; let label = chosen===60?'Triple-20':(chosen===40?'Doppel-20':'Single-20'); restSuggestion.textContent = `Vorschlag: ${label} → ${chosen} Punkte, verbleibend: ${rest}`; } else restSuggestion.textContent='';
+}
+
+function updateUI(){ restBigEl.textContent = score; updateSuggestion(); hitSummary.textContent = `${hits} von ${throws}`; const q = (301-score)/(throws||1)/60*100; if(throws===0) qualityVal.textContent='–'; else qualityVal.textContent = Math.min(120,q).toFixed(1)+' %'; if(score<=0){ document.querySelectorAll('.btn').forEach(b=> b.style.display='none'); } }
+
+function lockForPause(){ locked=true; document.querySelectorAll('.btn').forEach(b=> b.disabled=true); document.querySelectorAll('.g').forEach(el=> el.classList.add('disabled')); document.querySelectorAll('.r').forEach(el=> el.classList.add('disabled')); if(pauseTimer) clearTimeout(pauseTimer); pauseTimer = setTimeout(()=>{ locked=false; document.querySelectorAll('.btn').forEach(b=> b.disabled=false); document.querySelectorAll('.g').forEach(el=> el.classList.remove('disabled')); document.querySelectorAll('.r').forEach(el=> el.classList.remove('disabled')); roundThrows=0; },10000); }
+
+function applyThrow(points,label,action){ if(locked||score<=0) return; throws++; roundThrows++; if(points>0 && points<=score) hits++; if(points>score){ document.getElementById('status').textContent='ueberworfen!'; lockForPause(); return; } score -= points; recent.unshift(label); if(recent.length>3) recent.pop(); recentVals.textContent = recent.join(', '); recentVals.style.opacity=1; setTimeout(()=> recentVals.style.opacity=0,10000); updateUI(); if(score>0 && score<60){ setTimeout(()=> showCheckoutOptions(),120); return; } if(roundThrows>=3) lockForPause(); }
+
+function showCheckoutOptions(){ const board=document.getElementById('board'); board.innerHTML=''; const col=document.createElement('div'); col.className='col'; const b0=document.createElement('button'); b0.className='btn r'; b0.textContent='Null'; b0.onclick=()=>applyThrow(0,'Null'); col.appendChild(b0); const bex=document.createElement('button'); bex.className='btn g'; bex.textContent=String(score); bex.onclick=()=>applyThrow(score,String(score)); col.appendChild(bex); for(let s=1;s<=20;s++){ if(3*s===score){ const bt=document.createElement('button'); bt.className='btn g'; bt.textContent='Triple '+s; bt.onclick=(()=>applyThrow(3*s,'Triple '+s)); col.appendChild(bt);} if(2*s===score){ const bd=document.createElement('button'); bd.className='btn r'; bd.textContent='Doppel '+s; bd.onclick=(()=>applyThrow(2*s,'Doppel '+s)); col.appendChild(bd);} } board.appendChild(col); }
+
+document.getElementById('btnT').addEventListener('click', ()=> applyThrow(60,'Triple-20'));
+document.getElementById('btnD').addEventListener('click', ()=> applyThrow(40,'Doppel-20'));
+document.getElementById('btnS').addEventListener('click', ()=> applyThrow(20,'Single-20'));
+document.getElementById('btnBE').addEventListener('click', ()=> applyThrow(50,'Bulls Eye'));
+document.getElementById('btnB').addEventListener('click', ()=> applyThrow(25,'Bull'));
+document.getElementById('btn0').addEventListener('click', ()=> applyThrow(0,'Null'));
+
+document.getElementById('newGame').addEventListener('click', ()=> { score=301; throws=0; hits=0; recent=[]; roundThrows=0; locked=false; location.reload(); });
+
+gear.addEventListener('click', ()=> modalBg.style.display='flex');
+document.getElementById('closeSettings').addEventListener('click', ()=> modalBg.style.display='none');
+document.getElementById('saveSettings').addEventListener('click', ()=>{ if(document.getElementById('toggleDark').checked) document.documentElement.setAttribute('data-theme','dark'); else document.documentElement.removeAttribute('data-theme'); const vm=document.getElementById('viewMode').value; if(vm==='voice'){ document.documentElement.setAttribute('data-theme','voice'); document.documentElement.classList.add('voice-only'); } else { document.documentElement.classList.remove('voice-only'); } if(document.getElementById('preventSleep').checked){ try{ navigator.wakeLock && navigator.wakeLock.request('screen'); }catch(e){} } modalBg.style.display='none'; updateUI(); });
+
+iconDart.addEventListener('pointerdown', ()=>{ infoBox.style.display='block'; setTimeout(()=> infoBox.style.display='none',3000); });
+
+updateUI();
+</script>
+</body>
+</html>
