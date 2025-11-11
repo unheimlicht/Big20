@@ -1,232 +1,169 @@
-<!-- Big20 Dart Trainer v2.9 – Voice Active -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>| Big20</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Big-20 | Dart-Training (v3.0 Settings Edition)</title>
 <style>
-:root {
-  --green: #47d147;
-  --red: #ff4d4d;
-  --bg-dark: #111;
-  --bg-light: #f4f4f4;
-  --text-dark: #fff;
-  --text-light: #000;
+:root{
+  --bg:#f5f7fb; --card:#fff; --text:#111; --muted:#666; --accent:#2979ff; --good:#1fa64a; --bad:#d22;
+  --dark-bg:#000; --dark-card:#0b0b0b; --dark-text:#eaeaea; --dark-muted:#9a9a9a;
 }
-body {
-  font-family: Arial, sans-serif;
-  text-align: center;
-  margin: 0;
-  padding: 0;
-  background: var(--bg-light);
-  color: var(--text-light);
-}
-body.dark {
-  background: var(--bg-dark);
-  color: var(--text-dark);
-}
-h1 {
-  margin-top: 10px;
-}
-.score, .hit-rate, .quality {
-  margin: 8px auto;
-  font-size: 1.3em;
-}
-.rest {
-  font-size: 2.2em;
-  font-weight: bold;
-  color: green;
-}
-.buttons {
-  display: flex;
-  justify-content: space-evenly;
-  margin: 20px auto;
-  width: 90%;
-}
-.col {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-button {
-  padding: 15px;
-  border: none;
-  border-radius: 10px;
-  font-size: 1.2em;
-  color: white;
-  cursor: pointer;
-  transition: transform 0.2s, filter 0.2s;
-}
-button:disabled {
-  filter: brightness(150%);
-  cursor: not-allowed;
-}
-.green { background-color: var(--green); }
-.red { background-color: var(--red); }
-.settings, .new-game {
-  position: fixed;
-  bottom: 15px;
-  padding: 12px 16px;
-  border: none;
-  border-radius: 10px;
-  font-size: 1em;
-  color: white;
-  cursor: pointer;
-}
-.settings { left: 15px; background-color: #555; }
-.new-game { right: 15px; background-color: #888; }
-#infoIcon {
-  position: fixed;
-  bottom: 15px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 24px;
-  cursor: pointer;
-}
-#infoText {
-  display: none;
-  position: fixed;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0,0,0,0.8);
-  color: white;
-  padding: 15px;
-  border-radius: 10px;
-  width: 80%;
-}
-.version {
-  position: fixed;
-  bottom: 5px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 0.8em;
-  color: gray;
-}
-.quality span {
-  font-size: 1.4em;
-  font-weight: bold;
-}
-.quality.green { color: #47d147; }
-.quality.red { color: #ff4d4d; }
+html[data-theme="dark"]{ --bg:var(--dark-bg); --card:var(--dark-card); --text:var(--dark-text); --muted:var(--dark-muted); }
+body{margin:0;padding:18px;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+h1{text-align:center;margin:8px 0 14px;font-size:20px}
+.scoreboard{display:flex;justify-content:space-between;align-items:center;background:var(--card);padding:12px 14px;border-radius:12px;max-width:960px;margin:0 auto 12px;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+.btn{width:150px;padding:12px;margin:6px;border-radius:10px;border:0;background:var(--accent);color:#fff;font-size:16px;cursor:pointer;transition:transform .06s,opacity .12s,box-shadow .12s,background .12s}
+.btn:active{transform:translateY(1px) scale(.995)}
+.btn:disabled{opacity:.5;cursor:not-allowed;background:#e9e9ea;color:#777;box-shadow:none}
+.flash-green{animation:flashGreen .45s ease-out}
+.flash-red{animation:flashRed .45s ease-out}
+@keyframes flashGreen{0%{box-shadow:0 6px 0 rgba(0,0,0,0.06)}40%{box-shadow:0 28px 48px 12px rgba(40,200,80,0.6)}100%{box-shadow:0 6px 0 rgba(0,0,0,0.06)}}
+@keyframes flashRed{0%{box-shadow:0 6px 0 rgba(0,0,0,0.06)}40%{box-shadow:0 28px 48px 12px rgba(220,40,40,0.6)}100%{box-shadow:0 6px 0 rgba(0,0,0,0.06)}}
+#restBig{text-align:center;font-size:44px;font-weight:900;color:var(--good);margin:6px 0}
+#board{display:flex;justify-content:center;gap:28px;max-width:960px;margin:0 auto;min-height:160px}
+.col{display:flex;flex-direction:column;align-items:center}
+.undercol{display:flex;flex-direction:column;align-items:center;gap:8px}
+#qualityVal{text-align:center;font-size:20px;font-weight:800;margin-top:6px}
+#summary{text-align:center;font-size:16px;font-weight:600;margin-top:4px}
+#newGame{position:fixed;right:14px;bottom:14px;background:#e53935;color:#fff;border:0;padding:10px 16px;border-radius:30px;cursor:pointer}
+/* footer and controls */
+#controls{position:fixed;left:14px;bottom:14px;display:flex;align-items:center;gap:10px}
+.iconBtn{width:44px;height:44px;border-radius:8px;background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+.version{font-size:11px;color:var(--muted);display:block;text-align:center;margin-top:4px}
+/* settings modal */
+.modalShade{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:none;align-items:center;justify-content:center;z-index:200}
+.modal{background:var(--card);padding:18px;border-radius:12px;min-width:320px;max-width:760px;box-shadow:0 12px 40px rgba(0,0,0,0.25);color:var(--text)}
+.modal h2{margin:0 0 8px;font-size:18px}
+.row{display:flex;gap:12px;align-items:center;margin:8px 0}
+.col-auto{display:flex;flex-direction:column;gap:8px}
+.twoCol{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+select,input[type="checkbox"]{padding:8px;font-size:14px}
+.saveRow{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+/* sound buttons */
+.soundBtn{padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:transparent;cursor:pointer}
+.soundGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.small{font-size:13px;color:var(--muted)}
+/* pause layer subtle (reuse)*/
+.pauseLayer{position:fixed;left:0;right:0;bottom:0;top:0;display:none;align-items:center;justify-content:center;pointer-events:none;z-index:40}
+.pauseShade{position:absolute;inset:0;background:rgba(0,0,0,0.06);backdrop-filter: blur(1px);pointer-events:auto}
+.pauseInfo{position:relative;z-index:41;text-align:center;pointer-events:none}
+.pauseCount{font-size:56px;font-weight:900;color:var(--text);margin-bottom:6px}
+.pauseLast{font-size:16px;color:var(--text);font-weight:700;margin-bottom:6px}
+.pauseSub{font-size:14px;color:var(--muted)}
+.endcard{text-align:center;margin-top:20px;font-size:20px;font-weight:700;line-height:1.5}
+@media (max-width:720px){ .modal{width:92%} .pauseCount{font-size:44px} .btn{width:130px} }
 </style>
 </head>
 <body>
-<h1>| Big20</h1>
-
-<div class="score">Punkte: <span id="score">301</span></div>
-<div class="hit-rate">Treffer: <span id="hits">0</span> von <span id="throws">0</span></div>
-<div class="rest">Rest: <span id="rest">301</span></div>
-<div class="quality" id="qualityDisplay">Wurfqualität gesamt: <span id="qualityScore">0%</span></div>
-
-<div class="buttons">
-  <div class="col left">
-    <button class="red" onclick="registerThrow(60)">Triple-20</button>
-    <button class="green" onclick="registerThrow(40)">Doppel-20</button>
-    <button class="red" onclick="registerThrow(20)">Single-20</button>
-  </div>
-  <div class="col right">
-    <button class="green" onclick="registerThrow(50)">Bulls Eye</button>
-    <button class="red" onclick="registerThrow(25)">Bull</button>
-    <button class="green" onclick="registerThrow(0)">Null</button>
+<h1>Big-20 | Dart-Training</h1>
+<div class="scoreboard">
+  <div><div>Restpunkte</div><div id="restBig">301</div></div>
+  <div style="text-align:right">
+    <div id="summary">Treffer: 0 von 0</div>
+    <div id="qualityVal">WurfqualitÃ¤t: â€“</div>
   </div>
 </div>
-<div id="infoIcon">🎯</div>
-<div id="infoText">
-  <h3>Big20 Dart-Training</h3>
-  <p>Es werden nur Würfe mit 20 gewertet (Single, Doppel, Triple-20) sowie Bull (25) und Bulls Eye (50). Alle anderen Würfe zählen 0.</p>
+<div id="board" aria-live="polite"></div>
+<!-- controls: settings gear, dart icon, new game -->
+<div id="controls">
+  <div id="gear" class="iconBtn" title="Einstellungen">âš™</div>
+  <div id="dartIcon" class="iconBtn" title="Version">ðŸŽ¯</div>
+  <div class="version" id="versionText">v3.0 Settings Edition</div>
 </div>
-
-<button class="settings" onclick="openSettings()">⚙️</button>
-<button class="new-game" onclick="newGame()">Neues Spiel</button>
-<div class="version">v 2.9</div>
-
+<button id="newGame">Neues Spiel</button>
+<!-- pause layer -->
+<div id="pauseLayer" class="pauseLayer" aria-hidden="true">
+  <div class="pauseShade"></div>
+  <div class="pauseInfo" role="status" aria-live="polite">
+    <div class="pauseCount" id="pauseCount">5</div>
+    <div class="pauseLast" id="pauseLast">Triple-20 â€“ Null â€“ Bull</div>
+    <div class="pauseSub" id="pauseScore">Quality: 58 %</div>
+  </div>
+</div>
+<!-- settings modal -->
+<div id="modalShade" class="modalShade" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <h2 id="settingsTitle">Einstellungen</h2>
+    <div class="row"><label><input type="checkbox" id="keepAwake"> Display-Timeout 5 Minuten verhindern</label></div>
+    <div class="row"><label><input type="checkbox" id="darkModeToggle"> Darkmode (Always-On)</label></div>
+    <h3 style="margin-top:12px;margin-bottom:6px">Sounds testen</h3>
+    <div class="soundGrid" id="soundGrid"></div>
+    <h3 style="margin-top:12px;margin-bottom:6px">Sound-Zuweisungen</h3>
+    <div class="twoCol">
+      <div class="col-auto">
+        <label>Triple-20<select id="sTriple"></select></label>
+        <label>Doppel-20<select id="sDouble"></select></label>
+        <label>Single-20<select id="sSingle"></select></label>
+      </div>
+      <div class="col-auto">
+        <label>Bulls Eye<select id="sBullseye"></select></label>
+        <label>Bull<select id="sBull"></select></label>
+        <label>Null<select id="sZero"></select></label>
+      </div>
+    </div>
+    <div class="saveRow">
+      <button id="saveSettings" class="btn">Speichern</button>
+      <button id="closeSettings" class="btn" style="background:#ddd;color:#111">SchlieÃŸen</button>
+    </div>
+  </div>
+</div>
 <script>
-let rest = 301;
-let hits = 0;
-let throws = 0;
-let totalQuality = 0;
-
-// Soundbank
-const sounds = {
-  single: new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"),
-  miss: new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"),
-  bull: new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"),
-  bullseye: new Audio("https://actions.google.com/sounds/v1/alarms/bugle_tune.ogg")
-};
-
-function playSound(name, repeat=1) {
-  for (let i=0; i<repeat; i++) {
-    const snd = sounds[name].cloneNode();
-    setTimeout(()=>snd.play(), i*180);
-  }
-}
-
-function registerThrow(points) {
-  if (rest <= 0) return;
-  throws++;
-
-  if (points > 0) hits++;
-
-  let qualityNow = (points / 60) * 100;
-  totalQuality += qualityNow;
-  let avgQuality = (totalQuality / throws).toFixed(1);
-
-  document.getElementById("qualityScore").textContent = avgQuality + "%";
-  document.getElementById("qualityDisplay").className =
-      "quality " + (avgQuality >= 50 ? "green" : "red");
-
-  // Soundauswahl
-  if (points === 0) playSound("miss");
-  else if (points === 20) playSound("single");
-  else if (points === 40) playSound("single", 2);
-  else if (points === 60) playSound("single", 3);
-  else if (points === 25) playSound("bull");
-  else if (points === 50) playSound("bullseye");
-
-  rest -= points;
-  if (rest < 0) rest = 0;
-  document.getElementById("rest").textContent = rest;
-  document.getElementById("score").textContent = rest;
-  document.getElementById("hits").textContent = hits;
-  document.getElementById("throws").textContent = throws;
-
-  if (rest === 0) endGame();
-}
-
-function endGame() {
-  document.getElementById("qualityDisplay").innerHTML += "<br><b>Spielende!</b>";
-  document.querySelectorAll("button").forEach(btn => btn.disabled = true);
-}
-
-function newGame() {
-  rest = 301; hits = 0; throws = 0; totalQuality = 0;
-  document.getElementById("rest").textContent = rest;
-  document.getElementById("score").textContent = rest;
-  document.getElementById("hits").textContent = hits;
-  document.getElementById("throws").textContent = throws;
-  document.getElementById("qualityScore").textContent = "0%";
-  document.getElementById("qualityDisplay").className = "quality red";
-  document.getElementById("qualityDisplay").innerHTML =
-    'Wurfqualität gesamt: <span id="qualityScore">0%</span>';
-  document.querySelectorAll("button").forEach(btn => btn.disabled = false);
-}
-
-// Info-Icon-Funktion
-const infoIcon = document.getElementById("infoIcon");
-const infoText = document.getElementById("infoText");
-infoIcon.addEventListener("touchstart", showInfo);
-infoIcon.addEventListener("mousedown", showInfo);
-function showInfo() {
-  infoText.style.display = "block";
-  setTimeout(() => infoText.style.display = "none", 3500);
-}
-
-// Einstellungen-Platzhalter
-function openSettings() {
-  alert("Einstellungen kommen in Version 3.0 – Voice Mode, Farbwahl & Timeout.");
-}
+/* Full v3.0 Settings Edition implementation */
+let score=301, throws=0, hits=0, qualitySum=0, roundThrows=0;
+let lastThree=[], inPause=false, voiceEnabled=true, wakeLock=null;
+const restBig=document.getElementById('restBig'), summary=document.getElementById('summary'), qualityVal=document.getElementById('qualityVal'), board=document.getElementById('board');
+const pauseLayer=document.getElementById('pauseLayer'), pauseCount=document.getElementById('pauseCount'), pauseLast=document.getElementById('pauseLast'), pauseScore=document.getElementById('pauseScore');
+const gear=document.getElementById('gear'), modalShade=document.getElementById('modalShade'), closeSettings=document.getElementById('closeSettings'), saveSettings=document.getElementById('saveSettings');
+const keepAwake=document.getElementById('keepAwake'), darkModeToggle=document.getElementById('darkModeToggle');
+const soundGrid=document.getElementById('soundGrid'), sTriple=document.getElementById('sTriple'), sDouble=document.getElementById('sDouble'), sSingle=document.getElementById('sSingle'), sBullseye=document.getElementById('sBullseye'), sBull=document.getElementById('sBull'), sZero=document.getElementById('sZero');
+const qualityMap={60:100,50:83.33,40:66.67,25:41.67,20:33.33,0:0};
+const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+const audioCtx = new AudioContextClass();
+const soundPresets=[
+  {name:'Click 1',type:'sine',freq:800},
+  {name:'Click 2',type:'sine',freq:1000},
+  {name:'Pop',type:'square',freq:600},
+  {name:'Beep',type:'sine',freq:1100},
+  {name:'Tock',type:'triangle',freq:700},
+  {name:'Ping',type:'sine',freq:1400},
+  {name:'Blip',type:'square',freq:900},
+  {name:'Clack',type:'triangle',freq:650},
+  {name:'Ding',type:'sine',freq:1200},
+  {name:'Tick',type:'square',freq:500},
+  {name:'Zing',type:'sawtooth',freq:1500},
+  {name:'Tone',type:'sine',freq:400}
+];
+let soundAssign={Triple:0,Double:1,Single:2,Bullseye:3,Bull:4,Zero:5};
+function loadSettings(){ try{ const s=JSON.parse(localStorage.getItem('big20_settings')||'{}'); if(s.soundAssign) soundAssign=s.soundAssign; if(s.darkMode) document.documentElement.setAttribute('data-theme','dark'); else document.documentElement.removeAttribute('data-theme'); if(s.darkMode) darkModeToggle.checked=true; else darkModeToggle.checked=false; if(s.keepAwake){ keepAwake.checked=true; requestWakeLock(); } else keepAwake.checked=false; }catch(e){console.warn(e);} }
+function saveSettingsToStore(){ const obj={soundAssign, darkMode: !!darkModeToggle.checked, keepAwake: !!keepAwake.checked}; localStorage.setItem('big20_settings', JSON.stringify(obj)); }
+function buildSoundUI(){ soundGrid.innerHTML=''; soundPresets.forEach((s,i)=>{ const b=document.createElement('button'); b.className='soundBtn'; b.textContent=s.name; b.onclick=()=>playSound(i); soundGrid.appendChild(b); [sTriple,sDouble,sSingle,sBullseye,sBull,sZero].forEach(sel=>{ const opt=document.createElement('option'); opt.value=i; opt.textContent=s.name; sel.appendChild(opt); }); }); sTriple.value=soundAssign.Triple; sDouble.value=soundAssign.Double; sSingle.value=soundAssign.Single; sBullseye.value=soundAssign.Bullseye; sBull.value=soundAssign.Bull; sZero.value=soundAssign.Zero; }
+function playSound(index){ try{ const p=soundPresets[index]; if(!p) return; const o=audioCtx.createOscillator(); const g=audioCtx.createGain(); o.type=p.type; o.frequency.value=p.freq; g.gain.value=0.0001; o.connect(g); g.connect(audioCtx.destination); const now=audioCtx.currentTime; g.gain.setValueAtTime(0.0001,now); g.gain.exponentialRampToValueAtTime(0.18, now+0.005); o.start(now); g.gain.exponentialRampToValueAtTime(0.0001, now+0.18); o.stop(now+0.21); }catch(e){console.warn('audio err',e);} }
+function chooseGermanVoice(){ if(typeof speechSynthesis==='undefined') return null; const voices=speechSynthesis.getVoices(); const maleNames=/(Markus|Michael|Thomas|Peter|Hans|Jan|Mark|David|Daniel|Andreas|Mann|Male|Herr)/i; let v=voices.find(x=>x.lang&&x.lang.startsWith('de')&&maleNames.test(x.name)); if(!v) v=voices.find(x=>x.lang&&x.lang.startsWith('de')); return v||null; }
+function speak(text){ if(!voiceEnabled||typeof speechSynthesis==='undefined') return; try{ const v=chooseGermanVoice(); const msg=new SpeechSynthesisUtterance(text); if(v) msg.voice=v; msg.lang='de-DE'; msg.rate=1; msg.pitch=1; speechSynthesis.cancel(); speechSynthesis.speak(msg); }catch(e){console.warn('speech',e);} }
+function computeQualityDisplay(){ if(throws===0) return 'WurfqualitÃ¤t: â€“'; return 'WurfqualitÃ¤t: '+Math.round(qualitySum/throws)+' %'; }
+function updateUI(){ restBig.textContent=score; summary.textContent='Treffer: '+hits+' von '+throws; qualityVal.textContent=computeQualityDisplay(); }
+function renderBoard(){ board.innerHTML=''; if(score===0){ showEndCard(); return; } if(score<20){ renderUnder20Centered(score); return; } const tripleDis=(score<=59), beDis=(score<=49), doubleDis=(score<=39), bullDis=(score<=24); const left=document.createElement('div'); left.className='col'; const right=document.createElement('div'); right.className='col'; const leftBtns=[{t:'Triple-20',v:60,d:tripleDis,assign:'Triple'},{t:'Doppel-20',v:40,d:doubleDis,assign:'Double'},{t:'Single-20',v:20,d:false,assign:'Single'}]; const rightBtns=[{t:'Bulls Eye',v:50,d:beDis,assign:'Bullseye'},{t:'Bull',v:25,d:bullDis,assign:'Bull'},{t:'Null',v:0,d:false,assign:'Zero'}]; leftBtns.forEach(b=>{ const el=document.createElement('button'); el.className='btn'; el.textContent=b.t; el.disabled=b.d; el.onclick=()=>handleClick(el,b.v,b.t,b.assign); left.appendChild(el); }); rightBtns.forEach(b=>{ const el=document.createElement('button'); el.className='btn'; el.textContent=b.t; el.disabled=b.d; el.onclick=()=>handleClick(el,b.v,b.t,b.assign); right.appendChild(el); }); board.appendChild(left); board.appendChild(right); }
+function renderUnder20Centered(s){ board.innerHTML=''; const col=document.createElement('div'); col.className='undercol'; function add(label,val,assign){ const b=document.createElement('button'); b.className='btn'; b.textContent=label; b.onclick=()=>handleClick(b,val,label,assign); col.appendChild(b); } if(s===19) add('19',19,'Single'); else if(s===18){ add('Triple-6',18,'Triple'); add('Doppel-9',18,'Double'); add('18',18,'Single'); } else if(s===17) add('17',17,'Single'); else if(s===16){ add('Doppel-8',16,'Double'); add('16',16,'Single'); } else if(s===15){ add('Triple-5',15,'Triple'); add('15',15,'Single'); } else if(s===14){ add('Doppel-7',14,'Double'); add('14',14,'Single'); } else if(s===13) add('13',13,'Single'); else if(s===12){ add('Triple-4',12,'Triple'); add('Doppel-6',12,'Double'); add('12',12,'Single'); } else if(s===11) add('11',11,'Single'); else if(s===10){ add('Doppel-5',10,'Double'); add('10',10,'Single'); } else if(s===9){ add('Triple-3',9,'Triple'); add('9',9,'Single'); } else if(s===8){ add('Doppel-4',8,'Double'); add('8',8,'Single'); } else if(s===7) add('7',7,'Single'); else if(s===6){ add('Triple-2',6,'Triple'); add('Doppel-3',6,'Double'); add('6',6,'Single'); } else if(s===5) add('5',5,'Single'); else if(s===4){ add('Doppel-2',4,'Double'); add('4',4,'Single'); } else if(s===3){ add('Triple-1',3,'Triple'); add('3',3,'Single'); } else if(s===2){ add('Doppel-1',2,'Double'); add('2',2,'Single'); } else if(s===1) add('1',1,'Single'); add('Null',0,'Zero'); board.appendChild(col); }
+function handleClick(btnEl, points, label, assignKey){ if(inPause) return; if(navigator.vibrate) navigator.vibrate(30); const isHit = points>0; flashVisual(btnEl,isHit); const idx = soundAssign[assignKey]!==undefined? soundAssign[assignKey]:0; playSound(idx); scoring(points,label,assignKey); }
+function flashVisual(el,hit){ el.style.background = hit ? '#2ecc71' : '#ff6b6b'; setTimeout(()=>{ el.style.background = ''; },350); el.classList.remove('flash-green','flash-red'); void el.offsetWidth; el.classList.add(hit?'flash-green':'flash-red'); setTimeout(()=>{ el.classList.remove('flash-green','flash-red'); },460); }
+function scoring(points,label,assignKey){ throws++; roundThrows++; const potential = score - points; const bust = (potential < 0); if(bust){ qualitySum += qualityMap[0]; lastThree.push({label:label,points:0,q:0}); if(lastThree.length>3) lastThree.shift(); updateUI(); checkPause(); return; } if(points>0) hits++; score = potential; let q = (qualityMap[points]!==undefined)? qualityMap[points]:0; if(score===0) q=100; qualitySum += q; lastThree.push({label:label,points:points,q: Math.round(q)}); if(lastThree.length>3) lastThree.shift(); updateUI(); if(score===0){ renderBoard(); announceEnd(); return; } checkPause(); }
+function checkPause(){ if(roundThrows>=3){ roundThrows=0; startPause(); } else { renderBoard(); } }
+function startPause(){ inPause=true; pauseLayer.style.display='flex'; pauseLayer.setAttribute('aria-hidden','false'); const arr=lastThree.slice(-3); const labels=arr.map(it=>it.label||'-'); pauseLast.textContent = labels.join(' â€“ '); const avg = arr.length>0? Math.round(arr.reduce((s,x)=>s+(x.q||0),0)/arr.length):0; pauseScore.textContent = 'Quality: '+avg+' %'; pauseScore.style.color = (avg>=50)?'var(--good)':'var(--bad)'; if(voiceEnabled){ const spoken = labels.join(', ') + ' â€” Quality Score ' + avg + ' Prozent'; speak(cleanSpoken(spoken)); } let t=5; pauseCount.textContent=t; const iv=setInterval(()=>{ t--; pauseCount.textContent=t; if(t<=0){ clearInterval(iv); endPause(); } },1000); }
+function endPause(){ inPause=false; pauseLayer.style.display='none'; pauseLayer.setAttribute('aria-hidden','true'); renderBoard(); }
+function announceEnd(){ const avg = throws>0?Math.round(qualitySum/throws):0; const text = `Spiel beendet. Treffer: ${hits} von ${throws}. WurfqualitÃ¤t: ${avg} Prozent.`; board.innerHTML=''; const card=document.createElement('div'); card.className='endcard'; card.innerHTML = `ðŸŽ¯ <b>Spiel beendet!</b><br><br>${hits} Treffer von ${throws} WÃ¼rfen<br>WurfqualitÃ¤t: ${avg} %`; board.appendChild(card); speak(cleanSpoken(text)); }
+function cleanSpoken(s){ let out=s.replace(/-/g,' '); out = out.replace(/minus\s*/ig,' '); return out; }
+function requestWakeLock(){ try{ if('wakeLock' in navigator){ navigator.wakeLock.request('screen').then(wl=>{ wakeLock=wl; wakeLock.addEventListener('release',()=>{ wakeLock=null; }); }).catch(e=>console.warn('wake lock request failed',e)); } }catch(e){console.warn(e);} }
+function releaseWakeLock(){ try{ if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; } }catch(e){console.warn(e);} }
+function buildSoundUI(){ soundGrid.innerHTML=''; soundPresets.forEach((s,i)=>{ const b=document.createElement('button'); b.className='soundBtn'; b.textContent=s.name; b.onclick=()=>playSound(i); soundGrid.appendChild(b); [sTriple,sDouble,sSingle,sBullseye,sBull,sZero].forEach(sel=>{ const opt=document.createElement('option'); opt.value=i; opt.textContent=s.name; sel.appendChild(opt); }); }); sTriple.value=soundAssign.Triple; sDouble.value=soundAssign.Double; sSingle.value=soundAssign.Single; sBullseye.value=soundAssign.Bullseye; sBull.value=soundAssign.Bull; sZero.value=soundAssign.Zero; }
+function loadSettings(){ try{ const s=JSON.parse(localStorage.getItem('big20_settings')||'{}'); if(s.soundAssign) soundAssign=s.soundAssign; if(s.darkMode) document.documentElement.setAttribute('data-theme','dark'); else document.documentElement.removeAttribute('data-theme'); if(s.darkMode) darkModeToggle.checked=true; else darkModeToggle.checked=false; if(s.keepAwake){ keepAwake.checked=true; requestWakeLock(); } else keepAwake.checked=false; }catch(e){console.warn(e);} }
+function saveSettingsToStore(){ const obj={soundAssign, darkMode: !!darkModeToggle.checked, keepAwake: !!keepAwake.checked}; localStorage.setItem('big20_settings', JSON.stringify(obj)); }
+if(typeof speechSynthesis!=='undefined'){ speechSynthesis.onvoiceschanged = ()=>{}; }
+function playSound(index){ try{ const p=soundPresets[index]; if(!p) return; const o=audioCtx.createOscillator(); const g=audioCtx.createGain(); o.type=p.type; o.frequency.value=p.freq; g.gain.value=0.0001; o.connect(g); g.connect(audioCtx.destination); const now=audioCtx.currentTime; g.gain.setValueAtTime(0.0001,now); g.gain.exponentialRampToValueAtTime(0.18, now+0.005); o.start(now); g.gain.exponentialRampToValueAtTime(0.0001, now+0.18); o.stop(now+0.21); }catch(e){console.warn('play sound err',e);} }
+document.getElementById('gear').onclick = ()=>{ document.getElementById('modalShade').style.display='flex'; document.getElementById('modalShade').setAttribute('aria-hidden','false'); };
+document.getElementById('closeSettings').onclick = ()=>{ document.getElementById('modalShade').style.display='none'; document.getElementById('modalShade').setAttribute('aria-hidden','true'); loadSettings(); };
+document.getElementById('saveSettings').onclick = ()=>{ soundAssign = {Triple: parseInt(sTriple.value), Double: parseInt(sDouble.value), Single: parseInt(sSingle.value), Bullseye: parseInt(sBullseye.value), Bull: parseInt(sBull.value), Zero: parseInt(sZero.value)}; if(darkModeToggle.checked) document.documentElement.setAttribute('data-theme','dark'); else document.documentElement.removeAttribute('data-theme'); if(keepAwake.checked) requestWakeLock(); else releaseWakeLock(); saveSettingsToStore(); document.getElementById('modalShade').style.display='none'; document.getElementById('modalShade').setAttribute('aria-hidden','true'); };
+renderBoard(); updateUI(); buildSoundUI(); loadSettings(); document.getElementById('newGame').onclick = ()=>{ score=301; throws=0; hits=0; qualitySum=0; roundThrows=0; lastThree=[]; inPause=false; document.getElementById('pauseLayer').style.display='none'; updateUI(); renderBoard(); };
 </script>
 </body>
 </html>
