@@ -55,32 +55,37 @@ select,input[type="checkbox"]{padding:8px;font-size:14px}
 @media (max-width:720px){ .modal{width:92%} .pauseCount{font-size:44px} .btn{width:130px} }
 
 /* Hintergrundbild f�r die gesamte Seite */
+
 body {
   background-image: url("https://raw.githubusercontent.com/unheimlicht/Big20/refs/heads/main/20251109_194725-COLLAGE%7E7.jpg");
-  background-position: center center;   /* Bild zentrieren */
-  background-repeat: no-repeat;         /* nicht kacheln */
-  background-size: cover;               /* f�llt den Bildschirm aus */
-  background-attachment: fixed;         /* bleibt beim Scrollen stehen */
-  background-color: #000;               /* falls das Bild kurz nicht l�dt */
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+  background-color: #000;
+  
 }
 
 /* --- [Optische Verbesserungen] ---------------------------------- */
 
-/* 1 �berschrift mit dezentem Glow-Effekt */
+
+/* ✨ Überschrift mit weißem Glow-Effekt */
 h1 {
-  text-shadow: 0 0 6px rgba(255,255,255,0.6),
-               0 0 10px rgba(0,120,255,0.4);
+  text-shadow:
+    0 0 6px rgba(255, 255, 255, 0.8),   /* weicher heller Kern */
+    0 0 12px rgba(255, 255, 255, 0.6),  /* äußerer Schein */
+    0 0 20px rgba(255, 255, 255, 0.4);  /* leichter Lichtschimmer */
   letter-spacing: 0.5px;
 }
 
-/*  Score-Box mit st�rkerem Milchglas-Effekt */
 .scoreboard {
-  background: rgba(255, 255, 255, 0.35);          /* deutlich transparenter */
-  backdrop-filter: blur(14px) saturate(500%);     /* st�rkerer Weichzeichner */
-  -webkit-backdrop-filter: blur(14px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.25);    /* dezentere Umrandung */
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);    /* sanfter Schatten */
-  border-radius: 16px;                            /* leicht rundere Ecken */
+  background: rgba(255, 255, 255, 0.55);          /* heller */
+  backdrop-filter: blur(18px) saturate(200%);     /* mehr Lichtstreuung */
+  -webkit-backdrop-filter: blur(18px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.15),
+    0 0 25px rgba(255, 255, 255, 0.15);           /* sanfter weißer Schein */
 }
 
 /* 3 Schaltfl�chen mit leichtem Schwebeschatten */
@@ -97,6 +102,30 @@ h1 {
 .btn:active {
   transform: translateY(1px) scale(0.98);        /* Klick-Feedback */
   box-shadow: 0 4px 10px rgba(0, 128, 255, 0.35);
+}
+
+/* 💡 Verstärkter Schatten- und Schwebeeffekt der Buttons */
+.btn {
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.99),   /* tieferer, weicher Schatten */
+    0 2px 4px rgba(0, 0, 0, 0.25);    /* leichter, schärferer Kernschatten */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Beim Überfahren leicht anheben + stärkerer Glow */
+.btn:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 12px 24px rgba(0, 0, 0, 0.4),
+    0 4px 10px rgba(0, 128, 255, 0.4); /* bläulicher Glow */
+}
+
+/* Beim Klicken etwas eindrücken */
+.btn:active {
+  transform: translateY(1px) scale(0.97);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    0 2px 6px rgba(0, 128, 255, 0.35);
 }
 
 </style>
@@ -191,7 +220,30 @@ function computeQualityDisplay(){ if(throws===0) return 'Wurfqualität: –'; re
 function updateUI(){ restBig.textContent=score; summary.textContent='Treffer: '+hits+' von '+throws; qualityVal.textContent=computeQualityDisplay(); }
 function renderBoard(){ board.innerHTML=''; if(score===0){ showEndCard(); return; } if(score<20){ renderUnder20Centered(score); return; } const tripleDis=(score<=59), beDis=(score<=49), doubleDis=(score<=39), bullDis=(score<=24); const left=document.createElement('div'); left.className='col'; const right=document.createElement('div'); right.className='col'; const leftBtns=[{t:'Triple-20',v:60,d:tripleDis,assign:'Triple'},{t:'Doppel-20',v:40,d:doubleDis,assign:'Double'},{t:'Single-20',v:20,d:false,assign:'Single'}]; const rightBtns=[{t:'Bulls Eye',v:50,d:beDis,assign:'Bullseye'},{t:'Bull',v:25,d:bullDis,assign:'Bull'},{t:'Null',v:0,d:false,assign:'Zero'}]; leftBtns.forEach(b=>{ const el=document.createElement('button'); el.className='btn'; el.textContent=b.t; el.disabled=b.d; el.onclick=()=>handleClick(el,b.v,b.t,b.assign); left.appendChild(el); }); rightBtns.forEach(b=>{ const el=document.createElement('button'); el.className='btn'; el.textContent=b.t; el.disabled=b.d; el.onclick=()=>handleClick(el,b.v,b.t,b.assign); right.appendChild(el); }); board.appendChild(left); board.appendChild(right); }
 function renderUnder20Centered(s){ board.innerHTML=''; const col=document.createElement('div'); col.className='undercol'; function add(label,val,assign){ const b=document.createElement('button'); b.className='btn'; b.textContent=label; b.onclick=()=>handleClick(b,val,label,assign); col.appendChild(b); } if(s===19) add('19',19,'Single'); else if(s===18){ add('Triple-6',18,'Triple'); add('Doppel-9',18,'Double'); add('18',18,'Single'); } else if(s===17) add('17',17,'Single'); else if(s===16){ add('Doppel-8',16,'Double'); add('16',16,'Single'); } else if(s===15){ add('Triple-5',15,'Triple'); add('15',15,'Single'); } else if(s===14){ add('Doppel-7',14,'Double'); add('14',14,'Single'); } else if(s===13) add('13',13,'Single'); else if(s===12){ add('Triple-4',12,'Triple'); add('Doppel-6',12,'Double'); add('12',12,'Single'); } else if(s===11) add('11',11,'Single'); else if(s===10){ add('Doppel-5',10,'Double'); add('10',10,'Single'); } else if(s===9){ add('Triple-3',9,'Triple'); add('9',9,'Single'); } else if(s===8){ add('Doppel-4',8,'Double'); add('8',8,'Single'); } else if(s===7) add('7',7,'Single'); else if(s===6){ add('Triple-2',6,'Triple'); add('Doppel-3',6,'Double'); add('6',6,'Single'); } else if(s===5) add('5',5,'Single'); else if(s===4){ add('Doppel-2',4,'Double'); add('4',4,'Single'); } else if(s===3){ add('Triple-1',3,'Triple'); add('3',3,'Single'); } else if(s===2){ add('Doppel-1',2,'Double'); add('2',2,'Single'); } else if(s===1) add('1',1,'Single'); add('Null',0,'Zero'); board.appendChild(col); }
-function handleClick(btnEl, points, label, assignKey){ if(inPause) return; if(navigator.vibrate) navigator.vibrate(30); const isHit = points>0; flashVisual(btnEl,isHit); const idx = soundAssign[assignKey]!==undefined? soundAssign[assignKey]:0; playSound(idx); scoring(points,label,assignKey); }
+function handleClick(btnEl, points, label, assignKey) {
+  if (inPause) return;
+
+  // 💥 Sofortiger Farb-Flash bei jedem Klick
+  const isHit = points > 0;
+  btnEl.style.transition = "background-color 0.15s ease";
+  btnEl.style.backgroundColor = isHit ? "rgba(0,255,0,0.6)" : "rgba(255,0,0,0.6)";
+  setTimeout(() => {
+    btnEl.style.backgroundColor = "";
+  }, 200);
+
+  // Haptisches Feedback
+  if (navigator.vibrate) navigator.vibrate(30);
+
+  // Optionaler animierter Flash (bestehend aus Deiner alten Funktion)
+  flashVisual(btnEl, isHit);
+
+  // Sound
+  const idx = soundAssign[assignKey] !== undefined ? soundAssign[assignKey] : 0;
+  playSound(idx);
+
+  // Scoring / Spielmechanik
+  scoring(points, label, assignKey);
+}
 function flashVisual(el,hit){ el.style.background = hit ? '#2ecc71' : '#ff6b6b'; setTimeout(()=>{ el.style.background = ''; },350); el.classList.remove('flash-green','flash-red'); void el.offsetWidth; el.classList.add(hit?'flash-green':'flash-red'); setTimeout(()=>{ el.classList.remove('flash-green','flash-red'); },460); }
 function scoring(points,label,assignKey){ throws++; roundThrows++; const potential = score - points; const bust = (potential < 0); if(bust){ qualitySum += qualityMap[0]; lastThree.push({label:label,points:0,q:0}); if(lastThree.length>3) lastThree.shift(); updateUI(); checkPause(); return; } if(points>0) hits++; score = potential; let q = (qualityMap[points]!==undefined)? qualityMap[points]:0; if(score===0) q=100; qualitySum += q; lastThree.push({label:label,points:points,q: Math.round(q)}); if(lastThree.length>3) lastThree.shift(); updateUI(); if(score===0){ renderBoard(); announceEnd(); return; } checkPause(); }
 function checkPause(){ if(roundThrows>=3){ roundThrows=0; startPause(); } else { renderBoard(); } }
