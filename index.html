@@ -54,36 +54,36 @@ select,input[type="checkbox"]{padding:8px;font-size:14px}
 .endcard{text-align:center;margin-top:20px;font-size:20px;font-weight:700;line-height:1.5}
 @media (max-width:720px){ .modal{width:92%} .pauseCount{font-size:44px} .btn{width:130px} }
 
-/* Hintergrundbild für die gesamte Seite */
+/* Hintergrundbild f�r die gesamte Seite */
 body {
   background-image: url("https://raw.githubusercontent.com/unheimlicht/Big20/refs/heads/main/20251109_194725-COLLAGE%7E7.jpg");
   background-position: center center;   /* Bild zentrieren */
   background-repeat: no-repeat;         /* nicht kacheln */
-  background-size: cover;               /* füllt den Bildschirm aus */
+  background-size: cover;               /* f�llt den Bildschirm aus */
   background-attachment: fixed;         /* bleibt beim Scrollen stehen */
-  background-color: #000;               /* falls das Bild kurz nicht lädt */
+  background-color: #000;               /* falls das Bild kurz nicht l�dt */
 }
 
 /* --- [Optische Verbesserungen] ---------------------------------- */
 
-/* 1️⃣ Überschrift mit dezentem Glow-Effekt */
+/* 1 �berschrift mit dezentem Glow-Effekt */
 h1 {
   text-shadow: 0 0 6px rgba(255,255,255,0.6),
                0 0 10px rgba(0,120,255,0.4);
   letter-spacing: 0.5px;
 }
 
-/* 🧊 Score-Box mit stärkerem Milchglas-Effekt */
+/*  Score-Box mit st�rkerem Milchglas-Effekt */
 .scoreboard {
   background: rgba(255, 255, 255, 0.35);          /* deutlich transparenter */
-  backdrop-filter: blur(14px) saturate(500%);     /* stärkerer Weichzeichner */
+  backdrop-filter: blur(14px) saturate(500%);     /* st�rkerer Weichzeichner */
   -webkit-backdrop-filter: blur(14px) saturate(160%);
   border: 1px solid rgba(255, 255, 255, 0.25);    /* dezentere Umrandung */
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);    /* sanfter Schatten */
   border-radius: 16px;                            /* leicht rundere Ecken */
 }
 
-/* 3️⃣ Schaltflächen mit leichtem Schwebeschatten */
+/* 3 Schaltfl�chen mit leichtem Schwebeschatten */
 .btn {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);    /* Grundschatten */
   transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -107,14 +107,14 @@ h1 {
   <div><div>Restpunkte</div><div id="restBig">301</div></div>
   <div style="text-align:right">
     <div id="summary">Treffer: 0 von 0</div>
-    <div id="qualityVal">WurfqualitÃ¤t: â€“</div>
+    <div id="qualityVal">Wurfqualität: –</div>
   </div>
 </div>
 <div id="board" aria-live="polite"></div>
 <!-- controls: settings gear, dart icon, new game -->
 <div id="controls">
-  <div id="gear" class="iconBtn" title="Einstellungen">âš™</div>
-  <div id="dartIcon" class="iconBtn" title="Version">ðŸŽ¯</div>
+  <div id="gear" class="iconBtn" title="Einstellungen">⚙</div>
+  <div id="dartIcon" class="iconBtn" title="Version">🎯</div>
   <div class="version" id="versionText">v3.0 Settings Edition</div>
 </div>
 <button id="newGame">Neues Spiel</button>
@@ -123,7 +123,7 @@ h1 {
   <div class="pauseShade"></div>
   <div class="pauseInfo" role="status" aria-live="polite">
     <div class="pauseCount" id="pauseCount">5</div>
-    <div class="pauseLast" id="pauseLast">Triple-20 â€“ Null â€“ Bull</div>
+    <div class="pauseLast" id="pauseLast">Triple-20 – Null – Bull</div>
     <div class="pauseSub" id="pauseScore">Quality: 58 %</div>
   </div>
 </div>
@@ -150,7 +150,7 @@ h1 {
     </div>
     <div class="saveRow">
       <button id="saveSettings" class="btn">Speichern</button>
-      <button id="closeSettings" class="btn" style="background:#ddd;color:#111">SchlieÃŸen</button>
+      <button id="closeSettings" class="btn" style="background:#ddd;color:#111">Schließen</button>
     </div>
   </div>
 </div>
@@ -187,7 +187,7 @@ function buildSoundUI(){ soundGrid.innerHTML=''; soundPresets.forEach((s,i)=>{ c
 function playSound(index){ try{ const p=soundPresets[index]; if(!p) return; const o=audioCtx.createOscillator(); const g=audioCtx.createGain(); o.type=p.type; o.frequency.value=p.freq; g.gain.value=0.0001; o.connect(g); g.connect(audioCtx.destination); const now=audioCtx.currentTime; g.gain.setValueAtTime(0.0001,now); g.gain.exponentialRampToValueAtTime(0.18, now+0.005); o.start(now); g.gain.exponentialRampToValueAtTime(0.0001, now+0.18); o.stop(now+0.21); }catch(e){console.warn('audio err',e);} }
 function chooseGermanVoice(){ if(typeof speechSynthesis==='undefined') return null; const voices=speechSynthesis.getVoices(); const maleNames=/(Markus|Michael|Thomas|Peter|Hans|Jan|Mark|David|Daniel|Andreas|Mann|Male|Herr)/i; let v=voices.find(x=>x.lang&&x.lang.startsWith('de')&&maleNames.test(x.name)); if(!v) v=voices.find(x=>x.lang&&x.lang.startsWith('de')); return v||null; }
 function speak(text){ if(!voiceEnabled||typeof speechSynthesis==='undefined') return; try{ const v=chooseGermanVoice(); const msg=new SpeechSynthesisUtterance(text); if(v) msg.voice=v; msg.lang='de-DE'; msg.rate=1; msg.pitch=1; speechSynthesis.cancel(); speechSynthesis.speak(msg); }catch(e){console.warn('speech',e);} }
-function computeQualityDisplay(){ if(throws===0) return 'WurfqualitÃ¤t: â€“'; return 'WurfqualitÃ¤t: '+Math.round(qualitySum/throws)+' %'; }
+function computeQualityDisplay(){ if(throws===0) return 'Wurfqualität: –'; return 'Wurfqualität: '+Math.round(qualitySum/throws)+' %'; }
 function updateUI(){ restBig.textContent=score; summary.textContent='Treffer: '+hits+' von '+throws; qualityVal.textContent=computeQualityDisplay(); }
 function renderBoard(){ board.innerHTML=''; if(score===0){ showEndCard(); return; } if(score<20){ renderUnder20Centered(score); return; } const tripleDis=(score<=59), beDis=(score<=49), doubleDis=(score<=39), bullDis=(score<=24); const left=document.createElement('div'); left.className='col'; const right=document.createElement('div'); right.className='col'; const leftBtns=[{t:'Triple-20',v:60,d:tripleDis,assign:'Triple'},{t:'Doppel-20',v:40,d:doubleDis,assign:'Double'},{t:'Single-20',v:20,d:false,assign:'Single'}]; const rightBtns=[{t:'Bulls Eye',v:50,d:beDis,assign:'Bullseye'},{t:'Bull',v:25,d:bullDis,assign:'Bull'},{t:'Null',v:0,d:false,assign:'Zero'}]; leftBtns.forEach(b=>{ const el=document.createElement('button'); el.className='btn'; el.textContent=b.t; el.disabled=b.d; el.onclick=()=>handleClick(el,b.v,b.t,b.assign); left.appendChild(el); }); rightBtns.forEach(b=>{ const el=document.createElement('button'); el.className='btn'; el.textContent=b.t; el.disabled=b.d; el.onclick=()=>handleClick(el,b.v,b.t,b.assign); right.appendChild(el); }); board.appendChild(left); board.appendChild(right); }
 function renderUnder20Centered(s){ board.innerHTML=''; const col=document.createElement('div'); col.className='undercol'; function add(label,val,assign){ const b=document.createElement('button'); b.className='btn'; b.textContent=label; b.onclick=()=>handleClick(b,val,label,assign); col.appendChild(b); } if(s===19) add('19',19,'Single'); else if(s===18){ add('Triple-6',18,'Triple'); add('Doppel-9',18,'Double'); add('18',18,'Single'); } else if(s===17) add('17',17,'Single'); else if(s===16){ add('Doppel-8',16,'Double'); add('16',16,'Single'); } else if(s===15){ add('Triple-5',15,'Triple'); add('15',15,'Single'); } else if(s===14){ add('Doppel-7',14,'Double'); add('14',14,'Single'); } else if(s===13) add('13',13,'Single'); else if(s===12){ add('Triple-4',12,'Triple'); add('Doppel-6',12,'Double'); add('12',12,'Single'); } else if(s===11) add('11',11,'Single'); else if(s===10){ add('Doppel-5',10,'Double'); add('10',10,'Single'); } else if(s===9){ add('Triple-3',9,'Triple'); add('9',9,'Single'); } else if(s===8){ add('Doppel-4',8,'Double'); add('8',8,'Single'); } else if(s===7) add('7',7,'Single'); else if(s===6){ add('Triple-2',6,'Triple'); add('Doppel-3',6,'Double'); add('6',6,'Single'); } else if(s===5) add('5',5,'Single'); else if(s===4){ add('Doppel-2',4,'Double'); add('4',4,'Single'); } else if(s===3){ add('Triple-1',3,'Triple'); add('3',3,'Single'); } else if(s===2){ add('Doppel-1',2,'Double'); add('2',2,'Single'); } else if(s===1) add('1',1,'Single'); add('Null',0,'Zero'); board.appendChild(col); }
@@ -195,9 +195,9 @@ function handleClick(btnEl, points, label, assignKey){ if(inPause) return; if(na
 function flashVisual(el,hit){ el.style.background = hit ? '#2ecc71' : '#ff6b6b'; setTimeout(()=>{ el.style.background = ''; },350); el.classList.remove('flash-green','flash-red'); void el.offsetWidth; el.classList.add(hit?'flash-green':'flash-red'); setTimeout(()=>{ el.classList.remove('flash-green','flash-red'); },460); }
 function scoring(points,label,assignKey){ throws++; roundThrows++; const potential = score - points; const bust = (potential < 0); if(bust){ qualitySum += qualityMap[0]; lastThree.push({label:label,points:0,q:0}); if(lastThree.length>3) lastThree.shift(); updateUI(); checkPause(); return; } if(points>0) hits++; score = potential; let q = (qualityMap[points]!==undefined)? qualityMap[points]:0; if(score===0) q=100; qualitySum += q; lastThree.push({label:label,points:points,q: Math.round(q)}); if(lastThree.length>3) lastThree.shift(); updateUI(); if(score===0){ renderBoard(); announceEnd(); return; } checkPause(); }
 function checkPause(){ if(roundThrows>=3){ roundThrows=0; startPause(); } else { renderBoard(); } }
-function startPause(){ inPause=true; pauseLayer.style.display='flex'; pauseLayer.setAttribute('aria-hidden','false'); const arr=lastThree.slice(-3); const labels=arr.map(it=>it.label||'-'); pauseLast.textContent = labels.join(' â€“ '); const avg = arr.length>0? Math.round(arr.reduce((s,x)=>s+(x.q||0),0)/arr.length):0; pauseScore.textContent = 'Quality: '+avg+' %'; pauseScore.style.color = (avg>=50)?'var(--good)':'var(--bad)'; if(voiceEnabled){ const spoken = labels.join(', ') + ' â€” Quality Score ' + avg + ' Prozent'; speak(cleanSpoken(spoken)); } let t=5; pauseCount.textContent=t; const iv=setInterval(()=>{ t--; pauseCount.textContent=t; if(t<=0){ clearInterval(iv); endPause(); } },1000); }
+function startPause(){ inPause=true; pauseLayer.style.display='flex'; pauseLayer.setAttribute('aria-hidden','false'); const arr=lastThree.slice(-3); const labels=arr.map(it=>it.label||'-'); pauseLast.textContent = labels.join(' – '); const avg = arr.length>0? Math.round(arr.reduce((s,x)=>s+(x.q||0),0)/arr.length):0; pauseScore.textContent = 'Quality: '+avg+' %'; pauseScore.style.color = (avg>=50)?'var(--good)':'var(--bad)'; if(voiceEnabled){ const spoken = labels.join(', ') + ' — Quality Score ' + avg + ' Prozent'; speak(cleanSpoken(spoken)); } let t=5; pauseCount.textContent=t; const iv=setInterval(()=>{ t--; pauseCount.textContent=t; if(t<=0){ clearInterval(iv); endPause(); } },1000); }
 function endPause(){ inPause=false; pauseLayer.style.display='none'; pauseLayer.setAttribute('aria-hidden','true'); renderBoard(); }
-function announceEnd(){ const avg = throws>0?Math.round(qualitySum/throws):0; const text = `Spiel beendet. Treffer: ${hits} von ${throws}. WurfqualitÃ¤t: ${avg} Prozent.`; board.innerHTML=''; const card=document.createElement('div'); card.className='endcard'; card.innerHTML = `ðŸŽ¯ <b>Spiel beendet!</b><br><br>${hits} Treffer von ${throws} WÃ¼rfen<br>WurfqualitÃ¤t: ${avg} %`; board.appendChild(card); speak(cleanSpoken(text)); }
+function announceEnd(){ const avg = throws>0?Math.round(qualitySum/throws):0; const text = `Spiel beendet. Treffer: ${hits} von ${throws}. Wurfqualität: ${avg} Prozent.`; board.innerHTML=''; const card=document.createElement('div'); card.className='endcard'; card.innerHTML = `🎯 <b>Spiel beendet!</b><br><br>${hits} Treffer von ${throws} Würfen<br>Wurfqualität: ${avg} %`; board.appendChild(card); speak(cleanSpoken(text)); }
 function cleanSpoken(s){ let out=s.replace(/-/g,' '); out = out.replace(/minus\s*/ig,' '); return out; }
 function requestWakeLock(){ try{ if('wakeLock' in navigator){ navigator.wakeLock.request('screen').then(wl=>{ wakeLock=wl; wakeLock.addEventListener('release',()=>{ wakeLock=null; }); }).catch(e=>console.warn('wake lock request failed',e)); } }catch(e){console.warn(e);} }
 function releaseWakeLock(){ try{ if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; } }catch(e){console.warn(e);} }
