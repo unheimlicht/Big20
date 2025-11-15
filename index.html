@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Big-20 | Dart-Training (v3.5 Final Diagnose)</title>
+<title>Big-20 | Dart-Training (v3.15 Final Layout)</title>
 <style>
 /* 1. Farb-Variablen */
 :root{
@@ -29,14 +29,48 @@ html[data-theme="dark"] body {
     background-image: none !important;
 }
 
-/* 3. Optische Verbesserungen (Unverändert) */
+/* 3. Optische Verbesserungen */
 h1 {
+  /* GLOW-EFFEKT */
   text-shadow:
     0 0 6px rgba(255, 255, 255, 0.8), 
     0 0 12px rgba(255, 255, 255, 0.6);
   letter-spacing: 0.5px;
-  text-align:center;margin:8px 0 14px;font-size:20px
+  text-align:center;margin:8px 0 0;font-size:20px
 }
+
+/* WUNSCH 2: NEU: Fixed Highscore am unteren Rand */
+#fixedHighscoreFooter {
+  position: fixed;
+  bottom: 60px; /* Über den Controls und New Game Button */
+  left: 0;
+  right: 0;
+  text-align: center;
+  z-index: 90; /* Unter Controls (z-index 100) */
+  pointer-events: none; /* Klicks gehen durch */
+  padding: 0 18px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+#headerHighscore {
+  /* Gleiche Schrift wie h1, mit leicht kleinerem Glow */
+  text-shadow:
+    0 0 4px rgba(255, 255, 255, 1), 
+    0 0 8px rgba(255, 255, 255, 0.8);
+  letter-spacing: 0.5px;
+  font-size: 20px; /* Gleich wie h1 */
+  font-weight: 800; 
+  color: var(--text);
+  line-height: 1.3;
+}
+html[data-theme="dark"] #headerHighscore {
+    text-shadow:
+        0 0 4px rgba(0, 0, 0, 0.8), 
+        0 0 8px rgba(0, 0, 0, 0.6); 
+    color: var(--dark-text);
+}
+
 
 .scoreboard {
   display:flex;justify-content:space-between;align-items:center;
@@ -52,7 +86,9 @@ h1 {
   padding:12px 14px;
 }
 .score-details { text-align:right; }
-.score-details #highscore { font-size: 13px; color: var(--muted); font-weight: 500; margin-top: 4px; }
+.score-details #summary { display: block; font-size:13px; font-weight:500; margin-top:4px; color: var(--muted); } 
+.score-details #qualityVal { font-size:20px; font-weight:800; margin-top:6px; }
+
 
 .btn {
   width:150px;padding:12px;margin:6px;border-radius:10px;border:0;background:var(--accent);color:#fff;font-size:16px;cursor:pointer;
@@ -79,11 +115,9 @@ h1 {
 #board{display:flex;justify-content:center;gap:28px;max-width:960px;margin:0 auto;min-height:160px}
 .col{display:flex;flex-direction:column;align-items:center}
 .undercol{display:flex;flex-direction:column;align-items:center;gap:8px}
-#qualityVal{text-align:center;font-size:20px;font-weight:800;margin-top:6px}
-#summary{text-align:center;font-size:16px;font-weight:600;margin-top:4px}
-#newGame{position:fixed;right:14px;bottom:14px;background:#e53935;color:#fff;border:0;padding:10px 16px;border-radius:30px;cursor:pointer}
+#newGame{position:fixed;right:14px;bottom:14px;background:#e53935;color:#fff;border:0;padding:10px 16px;border-radius:30px;cursor:pointer;z-index:100}
 /* footer and controls */
-#controls{position:fixed;left:14px;bottom:14px;display:flex;align-items:center;gap:10px}
+#controls{position:fixed;left:14px;bottom:14px;display:flex;align-items:center;gap:10px;z-index:100}
 .iconBtn{width:44px;height:44px;border-radius:8px;background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
 .version{font-size:11px;color:var(--muted);display:block;text-align:center;margin-top:4px}
 /* settings modal */
@@ -99,32 +133,173 @@ select,input[type="checkbox"]{padding:8px;font-size:14px}
 .soundBtn{padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:transparent;cursor:pointer}
 .soundGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .small{font-size:13px;color:var(--muted)}
-/* pause layer subtle (reuse)*/
+
+/* PAUSE LAYER (TEMPORÄR MIT COUNTDOWN) */
 .pauseLayer{position:fixed;left:0;right:0;bottom:0;top:0;display:none;align-items:center;justify-content:center;pointer-events:none;z-index:40}
-.pauseShade{position:absolute;inset:0;background:rgba(0,0,0,0.06);backdrop-filter: blur(1px);pointer-events:auto}
-.pauseInfo{position:relative;z-index:41;text-align:center;pointer-events:none}
-.pauseCount{font-size:56px;font-weight:900;color:var(--text);margin-bottom:6px}
-.pauseLast{font-size:16px;color:var(--text);font-weight:700;margin-bottom:6px}
-.pauseSub{font-size:14px;color:var(--muted)}
-.endcard{text-align:center;margin-top:20px;font-size:20px;font-weight:700;line-height:1.5}
-@media (max-width:720px){ .modal{width:92%} .pauseCount{font-size:44px} .btn{width:130px} }
+.pauseShade{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,0.1); 
+  backdrop-filter: blur(4px); 
+  -webkit-backdrop-filter: blur(4px);
+  pointer-events:auto
+}
+.pauseInfo{
+  position:relative;
+  z-index:41;
+  text-align:center;
+  pointer-events:none;
+  transform: translateY(60px); 
+}
+.pauseCount{
+  font-size:80px; 
+  font-weight:900;
+  color:white; 
+  margin-bottom:12px;
+  text-shadow:
+    0 0 8px rgba(255, 255, 255, 1),
+    0 0 16px rgba(255, 255, 255, 0.8),
+    0 0 24px rgba(0, 0, 0, 0.8);
+}
+.pauseLast{
+  font-size:24px; 
+  color:var(--dark-text); 
+  font-weight:700;
+  margin-bottom:6px;
+  text-shadow:
+    0 0 4px rgba(255, 255, 255, 0.8), 
+    0 0 8px rgba(255, 255, 255, 0.5);
+}
+.pauseSub{
+  font-size:30px; 
+  color:var(--dark-text);
+  font-weight: 900; 
+  text-shadow:
+    0 0 6px rgba(255, 255, 255, 1), 
+    0 0 12px rgba(255, 255, 255, 0.8);
+}
+
+/* PERSISTENTES ERGEBNIS-OVERLAY IM GLASS-OPTIK (Interimsbox) */
+.resultOverlay {
+  max-width: 960px;
+  margin: 0 auto; 
+  
+  /* Glass-Optik vom Scoreboard kopiert */
+  background: rgba(255, 255, 255, 0.4); 
+  backdrop-filter: blur(18px) saturate(200%); 
+  -webkit-backdrop-filter: blur(18px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  box-shadow: 
+    0 6px 16px rgba(0, 0, 0, 0.3),
+    0 12px 40px rgba(0, 0, 0, 0.25);
+  
+  padding: 12px 14px;
+  color: var(--text);
+  text-align: center;
+  
+  /* Initial hidden state: max-height/opacity für Flow-Animation */
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden; 
+  margin-bottom: 0px; 
+  margin-top: 0px; 
+  
+  transition: opacity 0.4s ease, max-height 0.4s ease, margin-top 0.4s ease;
+
+  z-index: 50; 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+}
+
+html[data-theme="dark"] .resultOverlay {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.resultOverlay.show {
+  opacity: 1;
+  max-height: 200px; 
+  margin-top: 24px; 
+  margin-bottom: 70px; /* Platz für die Controls, damit die Box nicht zu weit unten ist */
+}
+
+
+/* WUNSCH 1: Endgame Card (gleiche Breite und Form) */
+.endcard{
+  text-align:center;
+  margin-top: 24px; /* Abstand wie Interimsbox */
+  font-size:20px;
+  font-weight:700;
+  line-height:1.5;
+  background: rgba(255, 255, 255, 0.7); 
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 16px; /* 16px für Konsistenz */
+  padding: 12px 14px; /* Padding für Konsistenz */
+  width: 100%; /* NEU: Stellt sicher, dass es die volle Breite des Containers einnimmt */
+  max-width: 960px; 
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  color: var(--text); 
+}
+html[data-theme="dark"] .endcard {
+  background: rgba(0, 0, 0, 0.7); 
+  color: var(--dark-text);
+}
+.endcard b {
+  text-shadow: 0 0 3px rgba(255, 255, 255, 0.6), 0 0 6px rgba(255, 255, 255, 0.4);
+}
+html[data-theme="dark"] .endcard b {
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.6), 0 0 6px rgba(0, 0, 0, 0.4);
+}
+
+
+@media (max-width:720px){ 
+    .modal{width:92%} 
+    .pauseCount{font-size:60px} 
+    .pauseLast{font-size:20px} 
+    .pauseSub{font-size:24px} 
+    .btn{width:130px} 
+    .resultOverlay.show {
+        margin-bottom: 70px; /* Platz für die Controls */
+        margin-top: 24px;
+    } 
+    #fixedHighscoreFooter {
+        bottom: 70px; /* Adjust for mobile controls */
+    }
+}
 </style>
 </head>
 <body>
 <h1>Big-20 | Dart-Training</h1>
+
 <div class="scoreboard">
   <div><div>Restpunkte</div><div id="restBig">301</div></div>
+  
   <div class="score-details">
     <div id="summary">Treffer: 0 von 0</div>
     <div id="qualityVal">Wurfqualität: –</div>
-    <div id="highscore">Highscore: -</div> 
   </div>
 </div>
 <div id="board" aria-live="polite"></div>
+
+<div id="resultOverlay" class="resultOverlay"></div>
+
+<div id="fixedHighscoreFooter">
+  <div id="headerHighscore">Highscore: -</div>
+</div>
+
 <div id="controls">
-  <div id="gear" class="iconBtn" title="Einstellungen">⚙</div>
-  <div id="dartIcon" class="iconBtn" title="Version">🎯</div>
-  <div class="version" id="versionText">v3.5 Final Diagnose</div>
+  <div id="gear" class="iconBtn" title="Einstellungen">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82-.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0 .33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H12a1.65 1.65 0 0 0 1.51-1V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V12a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+  </div>
+  <div id="dartIcon" class="iconBtn" title="Version">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+  </div>
+  <div class="version" id="versionText">v3.15 Final Layout</div>
 </div>
 <button id="newGame">Neues Spiel</button>
 <div id="pauseLayer" class="pauseLayer" aria-hidden="true">
@@ -132,7 +307,7 @@ select,input[type="checkbox"]{padding:8px;font-size:14px}
   <div class="pauseInfo" role="status" aria-live="polite">
     <div class="pauseCount" id="pauseCount">5</div>
     <div class="pauseLast" id="pauseLast">Triple-20 – Null – Bull</div>
-    <div class="pauseSub" id="pauseScore">Quality: 58 %</div>
+    <div class="pauseSub" id="pauseScore">Scorewert: 58 %</div> 
   </div>
 </div>
 <div id="modalShade" class="modalShade" aria-hidden="true">
@@ -167,13 +342,17 @@ select,input[type="checkbox"]{padding:8px;font-size:14px}
   </div>
 </div>
 <script>
-/* Full v3.5 Final Diagnose implementation */
+/* Full v3.15 Final Layout */
 let score=301, throws=0, hits=0, qualitySum=0, roundThrows=0;
 let lastThree=[], inPause=false, voiceEnabled=true, wakeLock=null;
-let highscore = { quality: 0, hits: 0, throws: 0, avgQ: '– - – - –' }; 
+let sectorCounts = {Triple: 0, Double: 0, Single: 0, Bullseye: 0, Bull: 0, Zero: 0};
+let highscore = { quality: 0, hits: 0, throws: 0, avgQ: '– %' }; 
 
-const restBig=document.getElementById('restBig'), summary=document.getElementById('summary'), qualityVal=document.getElementById('qualityVal'), board=document.getElementById('board'), highscoreEl=document.getElementById('highscore');
+const restBig=document.getElementById('restBig'), summary=document.getElementById('summary'), qualityVal=document.getElementById('qualityVal'), board=document.getElementById('board');
+const highscoreEl=document.getElementById('headerHighscore'); 
+
 const pauseLayer=document.getElementById('pauseLayer'), pauseCount=document.getElementById('pauseCount'), pauseLast=document.getElementById('pauseLast'), pauseScore=document.getElementById('pauseScore');
+const resultOverlay=document.getElementById('resultOverlay'); 
 const gear=document.getElementById('gear'), modalShade=document.getElementById('modalShade'), closeSettings=document.getElementById('closeSettings'), saveSettings=document.getElementById('saveSettings'), resetData=document.getElementById('resetData');
 const keepAwake=document.getElementById('keepAwake'), darkModeToggle=document.getElementById('darkModeToggle');
 const soundGrid=document.getElementById('soundGrid'), sTriple=document.getElementById('sTriple'), sDouble=document.getElementById('sDouble'), sSingle=document.getElementById('sSingle'), sBullseye=document.getElementById('sBullseye'), sBull=document.getElementById('sBull'), sZero=document.getElementById('sZero');
@@ -189,65 +368,80 @@ const soundPresets=[
 let soundAssign={Triple:0,Double:1,Single:2,Bullseye:3,Bull:4,Zero:5};
 
 // **********************************************
-// Highscore-Logik (JETZT MIT DIAGNOSE-LOGGING)
+// Highscore-Logik (mit Sektor-Zählung)
 // **********************************************
+function getTopThreeSectors(counts) {
+    const sectorArray = Object.keys(counts).map(key => ({
+        label: key === 'Zero' ? '0' : key.replace(/Triple|Double|Single/, (m) => {
+            if(m === 'Triple') return 'Triple-20';
+            if(m === 'Double') return 'Doppel-20';
+            if(m === 'Single') return '20'; 
+            return m;
+        }),
+        count: counts[key]
+    }));
+
+    sectorArray.sort((a, b) => b.count - a.count);
+
+    const topThree = sectorArray.slice(0, 3).filter(s => s.count > 0);
+    
+    if (topThree.length === 0) return '– | – | –';
+    
+    const labels = topThree.map(s => s.label);
+    while (labels.length < 3) {
+        labels.push('–');
+    }
+
+    return labels.join(' | ');
+}
+
 function loadHighscore(){
-  console.log('--- loadHighscore gestartet ---');
   try{
     const hs = JSON.parse(localStorage.getItem('big20_highscore') || '{}');
-    console.log('Highscore Load Attempt (Raw):', hs); // Log 1: Rohe Daten aus localStorage
-
-    // Initialisierung des globalen highscore-Objekts
-    highscore = { quality: 0, hits: 0, throws: 0, avgQ: '– - – - –' };
+    
+    highscore = { quality: 0, hits: 0, throws: 0, avgQ: '– %', topThreeSectors: '– | – | –' }; 
 
     if (hs.quality !== undefined && (parseInt(hs.quality) > 0 || parseInt(hs.hits) > 0)) {
         highscore.quality = parseInt(hs.quality) || 0; 
         highscore.hits = parseInt(hs.hits) || 0;       
         highscore.throws = parseInt(hs.throws) || 0;   
-        highscore.avgQ = hs.avgQ || '– - – - –';       
+        highscore.avgQ = hs.avgQ || '– %';    
+        highscore.topThreeSectors = hs.topThreeSectors || '– | – | –'; 
     }
   } catch(e) {
-    console.error('FEHLER: Highscore konnte nicht geladen werden', e);
+    console.warn('Highscore konnte nicht geladen werden', e);
   }
-  console.log('Highscore Loaded (Final):', highscore); // Log 2: Final geladenes highscore-Objekt
   updateHighscoreUI(); 
-  console.log('--- loadHighscore beendet ---');
 }
 
 function saveHighscore(finalQuality, finalHits, finalThrows, finalAvgString){
-  console.log('--- saveHighscore gestartet ---');
-  console.log('Highscore Save Check. New Q:', finalQuality, ' | Current Q:', highscore.quality); // Log 3: Vergleichswerte
+  const topThreeSectorsString = getTopThreeSectors(sectorCounts);
 
-  // Speichern, wenn (1) der Wert besser ist ODER (2) der gespeicherte Wert 0 ist und der neue Wert > 0
   if (finalQuality > highscore.quality || (highscore.quality === 0 && finalQuality > 0)) {
     highscore.quality = finalQuality;
     highscore.hits = finalHits;
     highscore.throws = finalThrows;
     highscore.avgQ = finalAvgString;
-    
-    // Protokollierung des Speichervorgangs
-    console.log('!!! NEUER HIGHSCORE WIRD GESPEICHERT !!!', highscore); // Log 4: Speichervorgang
+    highscore.topThreeSectors = topThreeSectorsString; 
     localStorage.setItem('big20_highscore', JSON.stringify(highscore));
-    
     updateHighscoreUI();
-    console.log('--- saveHighscore beendet (GESPEICHERT) ---');
     return true; 
   }
-  
-  console.log('Kein neuer Highscore (New Q <= Current Q)'); // Log 5: Kein Speichern
-  console.log('--- saveHighscore beendet (NICHT GESPEICHERT) ---');
   return false;
 }
+
 function updateHighscoreUI(){
   const quality = highscore.quality || 0;
   const hits = highscore.hits || 0;
   const throws = highscore.throws || 0;
-  const avgQ = highscore.avgQ || '– - – - –';
-  highscoreEl.textContent = `Highscore: ${quality} % | ${hits} Treffer von ${throws} | ⌀ ${avgQ}`;
+  const topThree = highscore.topThreeSectors || '– | – | –';
+  
+  // Zeilenumbruch vor Top 3, kein senkrechter Strich
+  highscoreEl.innerHTML = `Highscore: ${quality} % | ${hits} Treffer von ${throws} <br> Top 3: ${topThree}`;
 }
 
 // **********************************************
-// Einstellungs-Logik (Unverändert)
+// Einstellungs-Logik 
 // **********************************************
 function loadSettings(){ 
     try{ 
@@ -282,34 +476,49 @@ function saveSettingsToStore(){
 }
 
 // **********************************************
-// Daten Reset Funktion (Unverändert)
+// Daten Reset Funktion 
 // **********************************************
 function resetAllData() {
     if (confirm('Sind Sie sicher, dass Sie alle gespeicherten Daten (Highscore, Sounds, Darkmode) löschen möchten?')) {
         localStorage.removeItem('big20_highscore');
         localStorage.removeItem('big20_settings');
-        // Initialisierung neu ausführen
         loadHighscore();
         loadSettings();
         alert('Alle gespeicherten Daten wurden gelöscht. Bitte starten Sie jetzt ein Spiel, um einen neuen Highscore zu speichern.');
-        
-        // Modal schließen
         document.getElementById('modalShade').style.display='none'; 
         document.getElementById('modalShade').setAttribute('aria-hidden','true'); 
     }
 }
 
 // **********************************************
-// RESTLICHE LOGIK (Unverändert)
+// RESTLICHE LOGIK
 // **********************************************
-function buildSoundUI(){ soundGrid.innerHTML=''; soundPresets.forEach((s,i)=>{ const b=document.createElement('button'); b.className='soundBtn'; b.textContent=s.name; b.onclick=()=>playSound(i); soundGrid.appendChild(b); [sTriple,sDouble,sSingle,sBullseye,sBull,sBull,sZero].forEach(sel=>{ const opt=document.createElement('option'); opt.value=i; opt.textContent=s.name; sel.appendChild(opt); }); }); sTriple.value=soundAssign.Triple; sDouble.value=soundAssign.Double; sSingle.value=soundAssign.Single; sBullseye.value=soundAssign.Bullseye; sBull.value=soundAssign.Bull; sZero.value=soundAssign.Zero; }
+function buildSoundUI(){ soundGrid.innerHTML=''; soundPresets.forEach((s,i)=>{ const b=document.createElement('button'); b.className='soundBtn'; b.textContent=s.name; b.onclick=()=>playSound(i); soundGrid.appendChild(b); [sTriple,sDouble,sSingle,sBullseye,sBull,sZero].forEach(sel=>{ const opt=document.createElement('option'); opt.value=i; opt.textContent=s.name; sel.appendChild(opt); }); }); sTriple.value=soundAssign.Triple; sDouble.value=soundAssign.Double; sSingle.value=soundAssign.Single; sBullseye.value=soundAssign.Bullseye; sBull.value=soundAssign.Bull; sZero.value=soundAssign.Zero; }
 function playSound(index){ try{ const p=soundPresets[index]; if(!p) return; const o=audioCtx.createOscillator(); const g=audioCtx.createGain(); o.type=p.type; o.frequency.value=p.freq; g.gain.value=0.0001; o.connect(g); g.connect(audioCtx.destination); const now=audioCtx.currentTime; g.gain.setValueAtTime(0.0001,now); g.gain.exponentialRampToValueAtTime(0.18, now+0.005); o.start(now); g.gain.exponentialRampToValueAtTime(0.0001, now+0.18); o.stop(now+0.21); }catch(e){console.warn('audio err',e);} }
 function chooseGermanVoice(){ if(typeof speechSynthesis==='undefined') return null; const voices=speechSynthesis.getVoices(); const maleNames=/(Markus|Michael|Thomas|Peter|Hans|Jan|Mark|David|Daniel|Andreas|Mann|Male|Herr)/i; let v=voices.find(x=>x.lang&&x.lang.startsWith('de')&&maleNames.test(x.name)); if(!v) v=voices.find(x=>x.lang&&x.lang.startsWith('de')); return v||null; }
 function speak(text){ if(!voiceEnabled||typeof speechSynthesis==='undefined') return; try{ const v=chooseGermanVoice(); const msg=new SpeechSynthesisUtterance(text); if(v) msg.voice=v; msg.lang='de-DE'; msg.rate=1; msg.pitch=1; speechSynthesis.cancel(); speechSynthesis.speak(msg); }catch(e){console.warn('speech',e);} }
-function computeQualityDisplay(){ if(throws===0) return 'Wurfqualität: –'; return 'Wurfqualität: '+Math.round(qualitySum/throws)+' %'; }
-function updateUI(){ restBig.textContent=score; summary.textContent='Treffer: '+hits+' von '+throws; qualityVal.textContent=computeQualityDisplay(); updateHighscoreUI(); } 
+function computeQualityDisplay(){ 
+    if(throws===0) return 'Wurfqualität: –'; 
+    return 'Wurfqualität: '+Math.round(qualitySum/throws)+' %'; 
+}
+function updateUI(){ 
+    restBig.textContent=score; 
+    summary.textContent='Treffer: '+hits+' von '+throws; 
+    qualityVal.textContent=computeQualityDisplay(); 
+    updateHighscoreUI(); 
+} 
 
-function renderBoard(){ board.innerHTML=''; if(score===0){ showEndCard(); return; } if(score<20){ renderUnder20Centered(score); return; } const tripleDis=(score<=59), beDis=(score<=49), doubleDis=(score<=39), bullDis=(score<=24); const left=document.createElement('div'); left.className='col'; const right=document.createElement('div'); right.className='col'; const leftBtns=[{t:'Triple-20',v:60,d:tripleDis,assign:'Triple'},{t:'Doppel-20',v:40,d:doubleDis,assign:'Double'},{t:'Single-20',v:20,d:false,assign:'Single'}]; const rightBtns=[{t:'Bulls Eye',v:50,d:beDis,assign:'Bullseye'},{t:'Bull',v:25,d:bullDis,assign:'Bull'},{t:'Null',v:0,d:false,assign:'Zero'}]; leftBtns.forEach(b=>{ const el=document.createElement('button'); el.className='btn'; el.textContent=b.t; el.disabled=b.d; el.onclick=()=>handleClick(el,b.v,b.t,b.assign); left.appendChild(el); }); rightBtns.forEach(b=>{ const el=document.createElement('button'); el.className='btn'; el.textContent=b.t; el.disabled=b.d; el.onclick=()=>handleClick(el,b.v,b.t,b.assign); right.appendChild(el); }); board.appendChild(left); board.appendChild(right); }
+function renderBoard(){ 
+    board.innerHTML=''; 
+    if(score===0){ 
+        return; 
+    } 
+    if(inPause) {
+        return; 
+    }
+
+    if(score<20){ renderUnder20Centered(score); return; } const tripleDis=(score<=59), beDis=(score<=49), doubleDis=(score<=39), bullDis=(score<=24); const left=document.createElement('div'); left.className='col'; const right=document.createElement('div'); right.className='col'; const leftBtns=[{t:'Triple-20',v:60,d:tripleDis,assign:'Triple'},{t:'Doppel-20',v:40,d:doubleDis,assign:'Double'},{t:'Single-20',v:20,d:false,assign:'Single'}]; const rightBtns=[{t:'Bulls Eye',v:50,d:beDis,assign:'Bullseye'},{t:'Bull',v:25,d:bullDis,assign:'Bull'},{t:'Null',v:0,d:false,assign:'Zero'}]; leftBtns.forEach(b=>{ const el=document.createElement('button'); el.className='btn'; el.textContent=b.t; el.disabled=b.d; el.onclick=()=>handleClick(el,b.v,b.t,b.assign); left.appendChild(el); }); rightBtns.forEach(b=>{ const el=document.createElement('button'); el.className='btn'; el.textContent=b.t; el.disabled=b.d; el.onclick=()=>handleClick(el,b.v,b.t,b.assign); right.appendChild(el); }); board.appendChild(left); board.appendChild(right); 
+}
 function renderUnder20Centered(s){ board.innerHTML=''; const col=document.createElement('div'); col.className='undercol'; function add(label,val,assign){ const b=document.createElement('button'); b.className='btn'; b.textContent=label; b.onclick=()=>handleClick(b,val,label,assign); col.appendChild(b); } if(s===19) add('19',19,'Single'); else if(s===18){ add('Triple-6',18,'Triple'); add('Doppel-9',18,'Double'); add('18',18,'Single'); } else if(s===17) add('17',17,'Single'); else if(s===16){ add('Doppel-8',16,'Double'); add('16',16,'Single'); } else if(s===15){ add('Triple-5',15,'Triple'); add('15',15,'Single'); } else if(s===14){ add('Doppel-7',14,'Double'); add('14',14,'Single'); } else if(s===13) add('13',13,'Single'); else if(s===12){ add('Triple-4',12,'Triple'); add('Doppel-6',12,'Double'); add('12',12,'Single'); } else if(s===11) add('11',11,'Single'); else if(s===10){ add('Doppel-5',10,'Double'); add('10',10,'Single'); } else if(s===9){ add('Triple-3',9,'Triple'); add('9',9,'Single'); } else if(s===8){ add('Doppel-4',8,'Double'); add('8',8,'Single'); } else if(s===7) add('7',7,'Single'); else if(s===6){ add('Triple-2',6,'Triple'); add('Doppel-3',6,'Double'); add('6',6,'Single'); } else if(s===5) add('5',5,'Single'); else if(s===4){ add('Doppel-2',4,'Double'); add('4',4,'Single'); } else if(s===3){ add('Triple-1',3,'Triple'); add('3',3,'Single'); } else if(s===2){ add('Doppel-1',2,'Double'); add('2',2,'Single'); } else if(s===1) add('1',1,'Single'); add('Null',0,'Zero'); board.appendChild(col); }
 function handleClick(btnEl, points, label, assignKey) {
   if (inPause) return;
@@ -327,19 +536,129 @@ function handleClick(btnEl, points, label, assignKey) {
   scoring(points, label, assignKey);
 }
 function flashVisual(el,hit){ el.classList.remove('flash-green','flash-red'); void el.offsetWidth; el.classList.add(hit?'flash-green':'flash-red'); setTimeout(()=>{ el.classList.remove('flash-green','flash-red'); },460); }
-function scoring(points,label,assignKey){ throws++; roundThrows++; const potential = score - points; const bust = (potential < 0); if(bust){ qualitySum += qualityMap[0]; lastThree.push({label:label,points:0,q:0}); if(lastThree.length>3) lastThree.shift(); updateUI(); checkPause(); return; } if(points>0) hits++; score = potential; let q = (qualityMap[points]!==undefined)? qualityMap[points]:0; if(score===0) q=100; qualitySum += q; lastThree.push({label:label,points:points,q: Math.round(q)}); if(lastThree.length>3) lastThree.shift(); updateUI(); if(score===0){ renderBoard(); announceEnd(); return; } checkPause(); }
-function checkPause(){ if(roundThrows>=3){ roundThrows=0; startPause(); } else { renderBoard(); } }
-function startPause(){ inPause=true; pauseLayer.style.display='flex'; pauseLayer.setAttribute('aria-hidden','false'); const arr=lastThree.slice(-3); const labels=arr.map(it=>it.label||'-'); pauseLast.textContent = labels.join(' – '); const avg = arr.length>0? Math.round(arr.reduce((s,x)=>s+(x.q||0),0)/arr.length):0; pauseScore.textContent = 'Quality: '+avg+' %'; pauseScore.style.color = (avg>=50)?'var(--good)':'var(--bad)'; if(voiceEnabled){ const spoken = labels.join(', ') + ' — Quality Score ' + avg + ' Prozent'; speak(cleanSpoken(spoken)); } let t=5; pauseCount.textContent=t; const iv=setInterval(()=>{ t--; pauseCount.textContent=t; if(t<=0){ clearInterval(iv); endPause(); } },1000); }
-function endPause(){ inPause=false; pauseLayer.style.display='none'; pauseLayer.setAttribute('aria-hidden','true'); renderBoard(); }
+function scoring(points,label,assignKey){ 
+  
+  // Permanente Ergebnisanzeige am Anfang jeder neuen Runde ausblenden
+  if (roundThrows === 0) { 
+      resultOverlay.classList.remove('show');
+  }
+
+  throws++; roundThrows++; 
+  if(sectorCounts.hasOwnProperty(assignKey)){
+      sectorCounts[assignKey]++;
+  }
+
+  const potential = score - points; 
+  const bust = (potential < 0); 
+  
+  if(bust){ 
+    qualitySum += qualityMap[0]; 
+    lastThree.push({label:label,points:0,q:0}); 
+    if(lastThree.length>3) lastThree.shift(); 
+    updateUI(); 
+    checkPause(); 
+    return; 
+  } 
+  
+  if(points>0) hits++; 
+  score = potential; 
+  let q = (qualityMap[points]!==undefined)? qualityMap[points]:0; 
+  if(score===0) q=100; 
+  qualitySum += q; 
+  lastThree.push({label:label,points:points,q: Math.round(q)}); 
+  if(lastThree.length>3) lastThree.shift(); 
+  updateUI(); 
+  
+  if(score===0){ 
+    renderBoard(); 
+    announceEnd(); 
+    return; 
+  } 
+  checkPause(); 
+}
+function checkPause(){ 
+    if(roundThrows>=3){ 
+        roundThrows=0; 
+        startPause(); 
+    } else { 
+        renderBoard(); 
+    } 
+}
+function startPause(){ 
+  inPause=true; 
+  // 1. TEMPORÄRES Pause Layer für Countdown anzeigen
+  pauseLayer.style.display='flex'; 
+  pauseLayer.setAttribute('aria-hidden','false'); 
+  
+  const arr=lastThree.slice(-3); 
+  const labels=arr.map(it=>it.label||'–'); 
+  
+  const totalPoints = arr.reduce((sum, x) => sum + (x.points || 0), 0);
+  const roundHits = arr.filter(x => x.points > 0).length; // Treffer in den letzten 3 Würfen
+  const avg = arr.length>0? Math.round(arr.reduce((s,x)=>s+(x.q||0),0)/arr.length):0; 
+  
+  pauseLast.textContent = labels.join(' – '); 
+  pauseScore.textContent = 'Scorewert: '+avg+' %'; 
+  pauseScore.style.color = (avg>=50)?'var(--dark-text)':'var(--dark-text)'; 
+  
+  // 2. NEU: Persistent Overlay vorbereiten
+  const scoreColor = (totalPoints>0)?'var(--good)':'var(--bad)';
+  
+  // HTML-Struktur für die schöne Glass-Box, die das Scoreboard spiegelt
+  resultOverlay.innerHTML = `
+    <div>
+        <div style="color: var(--muted);">Punktzahl zuletzt</div>
+        <div style="font-size: 44px; font-weight: 900; color: ${scoreColor}; margin: 6px 0;">${totalPoints}</div>
+    </div>
+    <div style="text-align:right;">
+        <div style="display: block; font-size: 13px; font-weight: 500; margin-top: 4px; color: var(--muted);">${roundHits} Treffer</div>
+        <div style="font-size: 20px; font-weight: 800; margin-top: 6px;">Wurfqualität: ${avg} %</div>
+    </div>
+  `;
+  
+  if(voiceEnabled){ 
+    const spoken = totalPoints + ' — Scorewert ' + avg + ' Prozent'; 
+    speak(cleanSpoken(spoken)); 
+  } 
+  
+  let t=5; 
+  pauseCount.textContent=t; 
+  const iv=setInterval(()=>{ 
+    t--; 
+    pauseCount.textContent=t; 
+    if(t<=0){ 
+      clearInterval(iv); 
+      endPause(); 
+    } 
+  },1000);
+  
+  // Animation: Permanentes Ergebnis blendet ein (nach 5s, wenn der Countdown fertig ist)
+  setTimeout(() => {
+    resultOverlay.classList.add('show');
+  }, 4900); 
+}
+
+function endPause(){ 
+    inPause=false; 
+    // Bugfix: Verstecke das TEMPORÄRE Pause Layer, um die Klicks freizugeben
+    pauseLayer.style.display='none'; 
+    pauseLayer.setAttribute('aria-hidden','true');
+    // Board muss neu gerendert werden, damit die Buttons im richtigen Zustand sind (z.B. 40 ist nicht mehr Disabled)
+    renderBoard(); 
+}
+
 function announceEnd(){ 
     const finalAvg = throws>0?Math.round(qualitySum/throws):0; 
     const finalHits = hits;
     const finalThrows = throws;
-    const lastThreeStr = lastThree.map(it => (it.q ? it.q : 0) + '%').join(' - ');
-    const text = `Spiel beendet. Treffer: ${finalHits} von ${finalThrows}. Wurfqualität: ${finalAvg} Prozent.`; 
+    const finalAvgStr = finalAvg + ' %';
     
-    // Highscore prüfen und speichern
-    const isNewHighscore = saveHighscore(finalAvg, finalHits, finalThrows, lastThreeStr);
+    const isNewHighscore = saveHighscore(finalAvg, finalHits, finalThrows, finalAvgStr);
+
+    // MUSS ausgeblendet werden
+    pauseLayer.style.display='none'; 
+    pauseLayer.setAttribute('aria-hidden','true'); 
+    resultOverlay.classList.remove('show'); // Auch das permanente Ergebnis ausblenden
 
     board.innerHTML=''; 
     const card=document.createElement('div'); 
@@ -351,9 +670,11 @@ function announceEnd(){
     }
 
     board.appendChild(card); 
-    speak(cleanSpoken(text)); 
+    speak(cleanSpoken(`Spiel beendet. Treffer: ${finalHits} von ${finalThrows}. Wurfqualität: ${finalAvg} Prozent.`)); 
+    
+    sectorCounts = {Triple: 0, Double: 0, Single: 0, Bullseye: 0, Bull: 0, Zero: 0};
 }
-function cleanSpoken(s){ let out=s.replace(/-/g,' '); out = out.replace(/minus\s*/ig,' '); return out; }
+function cleanSpoken(s){ let out=s.replace(/–/g,' | '); out = out.replace(/minus\s*/ig,' '); return out; }
 function requestWakeLock(){ try{ if('wakeLock' in navigator){ navigator.wakeLock.request('screen').then(wl=>{ wakeLock=wl; wl.addEventListener('release',()=>{ wakeLock=null; }); }).catch(e=>console.warn('wake lock request failed',e)); } }catch(e){console.warn(e);} }
 function releaseWakeLock(){ try{ if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; } }catch(e){console.warn(e);} }
 if(typeof speechSynthesis!=='undefined'){ speechSynthesis.onvoiceschanged = ()=>{}; }
@@ -377,14 +698,20 @@ document.getElementById('saveSettings').onclick = ()=>{
     document.getElementById('modalShade').setAttribute('aria-hidden','true'); 
 };
 
-// Event Listener für den neuen Reset-Button
 resetData.onclick = resetAllData;
 
-
-// Initialisierung und Events
 document.getElementById('gear').onclick = ()=>{ document.getElementById('modalShade').style.display='flex'; document.getElementById('modalShade').setAttribute('aria-hidden','false'); };
+document.getElementById('dartIcon').onclick = ()=>{ alert(document.getElementById('versionText').textContent); }; 
 document.getElementById('closeSettings').onclick = ()=>{ document.getElementById('modalShade').style.display='none'; document.getElementById('modalShade').setAttribute('aria-hidden','true'); loadSettings(); };
-document.getElementById('newGame').onclick = ()=>{ score=301; throws=0; hits=0; qualitySum=0; roundThrows=0; lastThree=[]; inPause=false; document.getElementById('pauseLayer').style.display='none'; updateUI(); renderBoard(); };
+document.getElementById('newGame').onclick = ()=>{ 
+    score=301; throws=0; hits=0; qualitySum=0; roundThrows=0; 
+    lastThree=[]; inPause=false; 
+    sectorCounts = {Triple: 0, Double: 0, Single: 0, Bullseye: 0, Bull: 0, Zero: 0}; 
+    document.getElementById('pauseLayer').style.display='none'; 
+    resultOverlay.classList.remove('show'); // Beim Neustart auch das permanente Ergebnis ausblenden
+    updateUI(); 
+    renderBoard(); 
+};
 
 renderBoard(); 
 buildSoundUI(); 
