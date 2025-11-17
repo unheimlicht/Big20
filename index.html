@@ -3,12 +3,16 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Big-20 | Dart-Training (v3.15 Final Layout)</title>
+<title>Big-20 | Dart-Training (v3.19 Spiellogik Fix)</title>
 <style>
 /* 1. Farb-Variablen */
 :root{
   --bg:#f5f7fb; --card:#fff; --text:#111; --muted:#666; --accent:#2979ff; --good:#1fa64a; --bad:#d22;
   --dark-bg:#000; --dark-card:#0b0b0b; --dark-text:#eaeaea; --dark-muted:#9a9a9a;
+  
+  /* NEU: Farben für Icons */
+  --gear-color: #fdd835; /* Bernstein / Gelb */
+  --dart-color: #e53935; /* Rot */
 }
 html[data-theme="dark"]{ 
     --bg:var(--dark-bg); --card:var(--dark-card); --text:var(--dark-text); --muted:var(--dark-muted); 
@@ -17,6 +21,7 @@ html[data-theme="dark"]{
 /* 2. BODY / Hintergrundbild */
 body{
     margin:0;padding:18px;font-family:Inter,Arial,sans-serif;
+    /* Bitte sicherstellen, dass das Bild im gleichen Ordner liegt, falls der Pfad nicht funktioniert. */
     background: var(--bg) url("https://raw.githubusercontent.com/unheimlicht/Big20/refs/heads/main/20251109_194725-COLLAGE%7E7.jpg") no-repeat center center fixed; 
     background-size: cover; 
     background-color: #000; 
@@ -36,10 +41,29 @@ h1 {
     0 0 6px rgba(255, 255, 255, 0.8), 
     0 0 12px rgba(255, 255, 255, 0.6);
   letter-spacing: 0.5px;
-  text-align:center;margin:8px 0 0;font-size:20px
+  text-align:center;
+  margin:8px 0 0;
+  font-size:20px
 }
 
-/* WUNSCH 2: NEU: Fixed Highscore am unteren Rand */
+/* WUNSCH 1: Leerzeile unter H1 */
+#headlineSpacer {
+    height: 12px; /* Setzt die Leerzeile */
+    display: block; 
+}
+
+/* WUNSCH 2 & KORREKTUR: Darkmode Menü-Kontrast */
+.modal h3 {
+    color: var(--text); 
+}
+/* Korrektur für Select-Felder im Darkmode */
+.modal select, .modal input[type="text"], .modal input[type="checkbox"] + label {
+    color: var(--text); /* Stellt sicher, dass der Text im Darkmode hell ist */
+    background-color: var(--card); /* Stellt sicher, dass das Feld einen dunklen Hintergrund hat */
+}
+/* Ende WUNSCH 2 Korrektur */
+
+
 #fixedHighscoreFooter {
   position: fixed;
   bottom: 60px; /* Über den Controls und New Game Button */
@@ -127,14 +151,29 @@ html[data-theme="dark"] #headerHighscore {
 .row{display:flex;gap:12px;align-items:center;margin:8px 0}
 .col-auto{display:flex;flex-direction:column;gap:8px}
 .twoCol{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* Sound-Zuweisungen (Rechtsbündig) */
+.col-auto label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; 
+  gap: 8px; 
+}
 select,input[type="checkbox"]{padding:8px;font-size:14px}
+select {
+    flex-grow: 1; 
+    min-width: 100px;
+    text-align: right; 
+}
+/* Ende Sound-Zuweisungen */
+
 .saveRow{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
 /* sound buttons */
 .soundBtn{padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:transparent;cursor:pointer}
 .soundGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .small{font-size:13px;color:var(--muted)}
 
-/* PAUSE LAYER (TEMPORÄR MIT COUNTDOWN) */
+/* WUNSCH 3: Countdown Schrift */
 .pauseLayer{position:fixed;left:0;right:0;bottom:0;top:0;display:none;align-items:center;justify-content:center;pointer-events:none;z-index:40}
 .pauseShade{
   position:absolute;
@@ -149,42 +188,29 @@ select,input[type="checkbox"]{padding:8px;font-size:14px}
   z-index:41;
   text-align:center;
   pointer-events:none;
-  transform: translateY(60px); 
+  /* Reduziert um Platz für die Box zu schaffen */
+  transform: translateY(0px); 
 }
 .pauseCount{
   font-size:80px; 
   font-weight:900;
-  color:white; 
+  color: #000; /* NEU: Schwarze Schrift */
   margin-bottom:12px;
+  /* NEU: Weißer Glow wie bei H1 */
   text-shadow:
     0 0 8px rgba(255, 255, 255, 1),
     0 0 16px rgba(255, 255, 255, 0.8),
-    0 0 24px rgba(0, 0, 0, 0.8);
+    0 0 24px rgba(255, 255, 255, 0.6);
 }
-.pauseLast{
-  font-size:24px; 
-  color:var(--dark-text); 
-  font-weight:700;
-  margin-bottom:6px;
-  text-shadow:
-    0 0 4px rgba(255, 255, 255, 0.8), 
-    0 0 8px rgba(255, 255, 255, 0.5);
-}
-.pauseSub{
-  font-size:30px; 
-  color:var(--dark-text);
-  font-weight: 900; 
-  text-shadow:
-    0 0 6px rgba(255, 255, 255, 1), 
-    0 0 12px rgba(255, 255, 255, 0.8);
-}
+/* Ende WUNSCH 3 */
 
-/* PERSISTENTES ERGEBNIS-OVERLAY IM GLASS-OPTIK (Interimsbox) */
+
+/* PERSISTENTES ERGEBNIS-OVERLAY IM GLASS-OPTIK */
 .resultOverlay {
   max-width: 960px;
   margin: 0 auto; 
   
-  /* Glass-Optik vom Scoreboard kopiert */
+  /* Glass-Optik */
   background: rgba(255, 255, 255, 0.4); 
   backdrop-filter: blur(18px) saturate(200%); 
   -webkit-backdrop-filter: blur(18px) saturate(200%);
@@ -198,14 +224,16 @@ select,input[type="checkbox"]{padding:8px;font-size:14px}
   color: var(--text);
   text-align: center;
   
-  /* Initial hidden state: max-height/opacity für Flow-Animation */
+  /* Initial hidden state, kompakte Version */
   opacity: 0;
   max-height: 0;
   overflow: hidden; 
   margin-bottom: 0px; 
   margin-top: 0px; 
-  
-  transition: opacity 0.4s ease, max-height 0.4s ease, margin-top 0.4s ease;
+  position: relative; /* Wichtig für die Animation */
+
+  /* Übergänge für Animation (Position, Größe, Opazität) */
+  transition: opacity 0.4s ease, max-height 0.4s ease, margin-top 0.4s ease, transform 0.4s ease, top 0.4s ease, width 0.4s ease;
 
   z-index: 50; 
   display: flex; 
@@ -218,27 +246,78 @@ html[data-theme="dark"] .resultOverlay {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Zustand nach der Animation (Finale Position/Größe) */
 .resultOverlay.show {
   opacity: 1;
   max-height: 200px; 
   margin-top: 24px; 
-  margin-bottom: 70px; /* Platz für die Controls, damit die Box nicht zu weit unten ist */
+  margin-bottom: 70px; 
+  /* Zurücksetzen der Transformationswerte */
+  transform: none; 
+  top: auto;
+  width: auto;
 }
 
+/* KLASSE für den Countdown-Zustand (zentral, groß) */
+.resultOverlay.floating {
+    position: absolute; 
+    top: 50%;
+    left: 50%;
+    /* Zentrieren und etwas anheben, damit es unter dem Countdown sitzt */
+    transform: translate(-50%, -150%); 
+    
+    /* Etwas breiter und höher, um den Übergang zu betonen */
+    width: 90%; 
+    max-width: 450px; 
+    padding: 18px 20px; 
+    
+    opacity: 1;
+    max-height: 200px;
+    margin-top: 0;
+    margin-bottom: 0;
+    z-index: 50; /* Über dem Shade, unter dem Countdown */
+}
 
-/* WUNSCH 1: Endgame Card (gleiche Breite und Form) */
+/* Style der Elemente innerhalb der Floating Box */
+.resultOverlay.floating div:first-child > div:last-child {
+    font-size: 50px; /* Punkte: leicht größer */
+}
+.resultOverlay.floating div:last-child > div:last-child {
+    font-size: 24px; /* Qualität: leicht größer */
+}
+/* Ende NEUE KLASSE */
+
+
+/* WUNSCH 4: Readme Popover mit Glass-Design */
+#readmePopover .modal {
+    /* Glass-Optik vom Scoreboard übernommen */
+    background: rgba(255, 255, 255, 0.7); 
+    backdrop-filter: blur(8px) saturate(180%); 
+    -webkit-backdrop-filter: blur(8px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    color: var(--text);
+}
+html[data-theme="dark"] #readmePopover .modal {
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--dark-text);
+}
+/* Ende WUNSCH 4 */
+
+
+/* Endgame Card (gleiche Breite und Form) */
 .endcard{
   text-align:center;
-  margin-top: 24px; /* Abstand wie Interimsbox */
+  margin-top: 24px; 
   font-size:20px;
   font-weight:700;
   line-height:1.5;
   background: rgba(255, 255, 255, 0.7); 
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border-radius: 16px; /* 16px für Konsistenz */
-  padding: 12px 14px; /* Padding für Konsistenz */
-  width: 100%; /* NEU: Stellt sicher, dass es die volle Breite des Containers einnimmt */
+  border-radius: 16px; 
+  padding: 12px 14px; 
+  width: 100%; 
   max-width: 960px; 
   margin-left: auto;
   margin-right: auto;
@@ -260,23 +339,20 @@ html[data-theme="dark"] .endcard b {
 @media (max-width:720px){ 
     .modal{width:92%} 
     .pauseCount{font-size:60px} 
-    .pauseLast{font-size:20px} 
-    .pauseSub{font-size:24px} 
     .btn{width:130px} 
     .resultOverlay.show {
-        margin-bottom: 70px; /* Platz für die Controls */
+        margin-bottom: 70px; 
         margin-top: 24px;
     } 
     #fixedHighscoreFooter {
-        bottom: 70px; /* Adjust for mobile controls */
+        bottom: 70px; 
     }
 }
 </style>
 </head>
 <body>
 <h1>Big-20 | Dart-Training</h1>
-
-<div class="scoreboard">
+<span id="headlineSpacer"></span> <div class="scoreboard">
   <div><div>Restpunkte</div><div id="restBig">301</div></div>
   
   <div class="score-details">
@@ -294,20 +370,25 @@ html[data-theme="dark"] .endcard b {
 
 <div id="controls">
   <div id="gear" class="iconBtn" title="Einstellungen">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82-.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0 .33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H12a1.65 1.65 0 0 0 1.51-1V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V12a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--gear-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3" fill="var(--gear-color)" stroke="none"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82-.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0 .33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H12a1.65 1.65 0 0 0 1.51-1V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V12a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
   </div>
-  <div id="dartIcon" class="iconBtn" title="Version">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+  <div id="dartIcon" class="iconBtn" title="Informationen">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--dart-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6" stroke="var(--dart-color)" fill="var(--dart-color)"></circle><circle cx="12" cy="12" r="2" stroke="#fff" fill="#fff"></circle></svg>
   </div>
-  <div class="version" id="versionText">v3.15 Final Layout</div>
+  <div class="version" id="versionText">v3.19 Spiellogik Fix</div>
 </div>
 <button id="newGame">Neues Spiel</button>
+
+<div id="readmePopover" class="modalShade" style="z-index: 250;">
+    <div class="modal" role="alert" aria-live="polite" style="max-width: 400px; text-align: center; cursor: pointer;">
+        <p style="margin: 0; font-size: 16px; font-weight: 600;">Trainiere Triple-20-Treffer und versuche so möglichst einen Scorewert von 100% zu erreichen. Es zählen alle 20er-Treffer, sowie Bull und Bulls Eye. Alle anderen Treffer zählen 0</p>
+    </div>
+</div>
+
 <div id="pauseLayer" class="pauseLayer" aria-hidden="true">
   <div class="pauseShade"></div>
   <div class="pauseInfo" role="status" aria-live="polite">
     <div class="pauseCount" id="pauseCount">5</div>
-    <div class="pauseLast" id="pauseLast">Triple-20 – Null – Bull</div>
-    <div class="pauseSub" id="pauseScore">Scorewert: 58 %</div> 
   </div>
 </div>
 <div id="modalShade" class="modalShade" aria-hidden="true">
@@ -317,8 +398,8 @@ html[data-theme="dark"] .endcard b {
     <div class="row"><label><input type="checkbox" id="darkModeToggle"> Darkmode (Always-On)</label></div>
     
     <h3 style="margin-top:12px;margin-bottom:6px">Daten</h3>
-    <button id="resetData" class="btn" style="width:auto;background:#e53935;">Alle gespeicherten Daten löschen</button>
-    <p class="small">Löscht Highscore und alle Einstellungen aus dem Browser.</p>
+    <button id="resetData" class="btn" style="width:auto;background:#e53935;">Highscore-Reset</button>
+    <p class="small">Löscht Highscore aus dem Browser. Einstellungen (Darkmode, Sounds, Timeout) bleiben erhalten.</p>
     
     <h3 style="margin-top:12px;margin-bottom:6px">Sounds testen</h3>
     <div class="soundGrid" id="soundGrid"></div>
@@ -342,7 +423,7 @@ html[data-theme="dark"] .endcard b {
   </div>
 </div>
 <script>
-/* Full v3.15 Final Layout */
+/* Full v3.19 Übergang + Spiellogik Fix */
 let score=301, throws=0, hits=0, qualitySum=0, roundThrows=0;
 let lastThree=[], inPause=false, voiceEnabled=true, wakeLock=null;
 let sectorCounts = {Triple: 0, Double: 0, Single: 0, Bullseye: 0, Bull: 0, Zero: 0};
@@ -351,7 +432,7 @@ let highscore = { quality: 0, hits: 0, throws: 0, avgQ: '– %' };
 const restBig=document.getElementById('restBig'), summary=document.getElementById('summary'), qualityVal=document.getElementById('qualityVal'), board=document.getElementById('board');
 const highscoreEl=document.getElementById('headerHighscore'); 
 
-const pauseLayer=document.getElementById('pauseLayer'), pauseCount=document.getElementById('pauseCount'), pauseLast=document.getElementById('pauseLast'), pauseScore=document.getElementById('pauseScore');
+const pauseLayer=document.getElementById('pauseLayer'), pauseCount=document.getElementById('pauseCount');
 const resultOverlay=document.getElementById('resultOverlay'); 
 const gear=document.getElementById('gear'), modalShade=document.getElementById('modalShade'), closeSettings=document.getElementById('closeSettings'), saveSettings=document.getElementById('saveSettings'), resetData=document.getElementById('resetData');
 const keepAwake=document.getElementById('keepAwake'), darkModeToggle=document.getElementById('darkModeToggle');
@@ -366,6 +447,10 @@ const soundPresets=[
   {name:'Tick',type:'square',freq:500},{name:'Zing',type:'sawtooth',freq:1500},{name:'Tone',type:'sine',freq:400}
 ];
 let soundAssign={Triple:0,Double:1,Single:2,Bullseye:3,Bull:4,Zero:5};
+
+// Readme Elemente
+const dartIcon = document.getElementById('dartIcon');
+const readmePopover = document.getElementById('readmePopover');
 
 // **********************************************
 // Highscore-Logik (mit Sektor-Zählung)
@@ -476,15 +561,14 @@ function saveSettingsToStore(){
 }
 
 // **********************************************
-// Daten Reset Funktion 
+// Daten Reset Funktion (Nur Highscore)
 // **********************************************
 function resetAllData() {
-    if (confirm('Sind Sie sicher, dass Sie alle gespeicherten Daten (Highscore, Sounds, Darkmode) löschen möchten?')) {
+    if (confirm('Sind Sie sicher, dass Sie den gespeicherten Highscore löschen möchten?')) {
         localStorage.removeItem('big20_highscore');
-        localStorage.removeItem('big20_settings');
+        // Einstellungen (big20_settings) bleiben erhalten
         loadHighscore();
-        loadSettings();
-        alert('Alle gespeicherten Daten wurden gelöscht. Bitte starten Sie jetzt ein Spiel, um einen neuen Highscore zu speichern.');
+        alert('Der Highscore wurde gelöscht.');
         document.getElementById('modalShade').style.display='none'; 
         document.getElementById('modalShade').setAttribute('aria-hidden','true'); 
     }
@@ -508,6 +592,10 @@ function updateUI(){
     updateHighscoreUI(); 
 } 
 
+// **********************************************
+// FEHLENDE FUNKTIONEN (Spielfelderzeugung)
+// **********************************************
+
 function renderBoard(){ 
     board.innerHTML=''; 
     if(score===0){ 
@@ -520,6 +608,11 @@ function renderBoard(){
     if(score<20){ renderUnder20Centered(score); return; } const tripleDis=(score<=59), beDis=(score<=49), doubleDis=(score<=39), bullDis=(score<=24); const left=document.createElement('div'); left.className='col'; const right=document.createElement('div'); right.className='col'; const leftBtns=[{t:'Triple-20',v:60,d:tripleDis,assign:'Triple'},{t:'Doppel-20',v:40,d:doubleDis,assign:'Double'},{t:'Single-20',v:20,d:false,assign:'Single'}]; const rightBtns=[{t:'Bulls Eye',v:50,d:beDis,assign:'Bullseye'},{t:'Bull',v:25,d:bullDis,assign:'Bull'},{t:'Null',v:0,d:false,assign:'Zero'}]; leftBtns.forEach(b=>{ const el=document.createElement('button'); el.className='btn'; el.textContent=b.t; el.disabled=b.d; el.onclick=()=>handleClick(el,b.v,b.t,b.assign); left.appendChild(el); }); rightBtns.forEach(b=>{ const el=document.createElement('button'); el.className='btn'; el.textContent=b.t; el.disabled=b.d; el.onclick=()=>handleClick(el,b.v,b.t,b.assign); right.appendChild(el); }); board.appendChild(left); board.appendChild(right); 
 }
 function renderUnder20Centered(s){ board.innerHTML=''; const col=document.createElement('div'); col.className='undercol'; function add(label,val,assign){ const b=document.createElement('button'); b.className='btn'; b.textContent=label; b.onclick=()=>handleClick(b,val,label,assign); col.appendChild(b); } if(s===19) add('19',19,'Single'); else if(s===18){ add('Triple-6',18,'Triple'); add('Doppel-9',18,'Double'); add('18',18,'Single'); } else if(s===17) add('17',17,'Single'); else if(s===16){ add('Doppel-8',16,'Double'); add('16',16,'Single'); } else if(s===15){ add('Triple-5',15,'Triple'); add('15',15,'Single'); } else if(s===14){ add('Doppel-7',14,'Double'); add('14',14,'Single'); } else if(s===13) add('13',13,'Single'); else if(s===12){ add('Triple-4',12,'Triple'); add('Doppel-6',12,'Double'); add('12',12,'Single'); } else if(s===11) add('11',11,'Single'); else if(s===10){ add('Doppel-5',10,'Double'); add('10',10,'Single'); } else if(s===9){ add('Triple-3',9,'Triple'); add('9',9,'Single'); } else if(s===8){ add('Doppel-4',8,'Double'); add('8',8,'Single'); } else if(s===7) add('7',7,'Single'); else if(s===6){ add('Triple-2',6,'Triple'); add('Doppel-3',6,'Double'); add('6',6,'Single'); } else if(s===5) add('5',5,'Single'); else if(s===4){ add('Doppel-2',4,'Double'); add('4',4,'Single'); } else if(s===3){ add('Triple-1',3,'Triple'); add('3',3,'Single'); } else if(s===2){ add('Doppel-1',2,'Double'); add('2',2,'Single'); } else if(s===1) add('1',1,'Single'); add('Null',0,'Zero'); board.appendChild(col); }
+
+// **********************************************
+// Ende der fehlenden Funktionen
+// **********************************************
+
 function handleClick(btnEl, points, label, assignKey) {
   if (inPause) return;
   const isHit = points > 0;
@@ -540,7 +633,7 @@ function scoring(points,label,assignKey){
   
   // Permanente Ergebnisanzeige am Anfang jeder neuen Runde ausblenden
   if (roundThrows === 0) { 
-      resultOverlay.classList.remove('show');
+      resultOverlay.classList.remove('show', 'floating');
   }
 
   throws++; roundThrows++; 
@@ -586,25 +679,18 @@ function checkPause(){
 }
 function startPause(){ 
   inPause=true; 
-  // 1. TEMPORÄRES Pause Layer für Countdown anzeigen
+  
+  // 1. Pause Layer (Hintergrund und Countdown) anzeigen
   pauseLayer.style.display='flex'; 
   pauseLayer.setAttribute('aria-hidden','false'); 
   
   const arr=lastThree.slice(-3); 
-  const labels=arr.map(it=>it.label||'–'); 
-  
   const totalPoints = arr.reduce((sum, x) => sum + (x.points || 0), 0);
-  const roundHits = arr.filter(x => x.points > 0).length; // Treffer in den letzten 3 Würfen
+  const roundHits = arr.filter(x => x.points > 0).length;
   const avg = arr.length>0? Math.round(arr.reduce((s,x)=>s+(x.q||0),0)/arr.length):0; 
-  
-  pauseLast.textContent = labels.join(' – '); 
-  pauseScore.textContent = 'Scorewert: '+avg+' %'; 
-  pauseScore.style.color = (avg>=50)?'var(--dark-text)':'var(--dark-text)'; 
-  
-  // 2. NEU: Persistent Overlay vorbereiten
   const scoreColor = (totalPoints>0)?'var(--good)':'var(--bad)';
   
-  // HTML-Struktur für die schöne Glass-Box, die das Scoreboard spiegelt
+  // 2. NEU: Persistent Overlay direkt im Floating Zustand anzeigen
   resultOverlay.innerHTML = `
     <div>
         <div style="color: var(--muted);">Punktzahl zuletzt</div>
@@ -615,6 +701,9 @@ function startPause(){
         <div style="font-size: 20px; font-weight: 800; margin-top: 6px;">Wurfqualität: ${avg} %</div>
     </div>
   `;
+  // Box wird sichtbar und erhält die zentrale/große Position
+  resultOverlay.classList.remove('show');
+  resultOverlay.classList.add('floating');
   
   if(voiceEnabled){ 
     const spoken = totalPoints + ' — Scorewert ' + avg + ' Prozent'; 
@@ -631,19 +720,21 @@ function startPause(){
       endPause(); 
     } 
   },1000);
-  
-  // Animation: Permanentes Ergebnis blendet ein (nach 5s, wenn der Countdown fertig ist)
-  setTimeout(() => {
-    resultOverlay.classList.add('show');
-  }, 4900); 
 }
 
 function endPause(){ 
     inPause=false; 
-    // Bugfix: Verstecke das TEMPORÄRE Pause Layer, um die Klicks freizugeben
+    
+    // 1. Box wird JETZT in die finale (obere) Position animiert
+    resultOverlay.classList.remove('floating'); // Entfernt zentrale Position
+    resultOverlay.classList.add('show');       // Fügt finale Position und Ränder hinzu (s. CSS)
+
+    // 2. Pause Layer (Hintergrund und Countdown) ausblenden
+    // Der Fade-Out und Blur-Out des Hintergrunds erfolgt direkt
     pauseLayer.style.display='none'; 
     pauseLayer.setAttribute('aria-hidden','true');
-    // Board muss neu gerendert werden, damit die Buttons im richtigen Zustand sind (z.B. 40 ist nicht mehr Disabled)
+    
+    // 3. Board muss neu gerendert werden
     renderBoard(); 
 }
 
@@ -658,7 +749,7 @@ function announceEnd(){
     // MUSS ausgeblendet werden
     pauseLayer.style.display='none'; 
     pauseLayer.setAttribute('aria-hidden','true'); 
-    resultOverlay.classList.remove('show'); // Auch das permanente Ergebnis ausblenden
+    resultOverlay.classList.remove('show', 'floating'); // Auch die Box komplett ausblenden
 
     board.innerHTML=''; 
     const card=document.createElement('div'); 
@@ -700,15 +791,42 @@ document.getElementById('saveSettings').onclick = ()=>{
 
 resetData.onclick = resetAllData;
 
-document.getElementById('gear').onclick = ()=>{ document.getElementById('modalShade').style.display='flex'; document.getElementById('modalShade').setAttribute('aria-hidden','false'); };
-document.getElementById('dartIcon').onclick = ()=>{ alert(document.getElementById('versionText').textContent); }; 
+// Gear Icon
+document.getElementById('gear').onclick = ()=>{ 
+    readmePopover.style.display='none'; // Close readme if open
+    document.getElementById('modalShade').style.display='flex'; 
+    document.getElementById('modalShade').setAttribute('aria-hidden','false'); 
+};
+
+// Dart Icon / Readme Popover Logic
+dartIcon.onclick = (e) => {
+    e.stopPropagation(); 
+    document.getElementById('modalShade').style.display='none'; // Close settings if open
+    document.getElementById('modalShade').setAttribute('aria-hidden','true');
+    
+    // Toggle Readme Popover
+    if (readmePopover.style.display === 'flex') {
+        readmePopover.style.display = 'none';
+        readmePopover.setAttribute('aria-hidden', 'true');
+    } else {
+        readmePopover.style.display = 'flex';
+        readmePopover.setAttribute('aria-hidden', 'false');
+    }
+};
+
+// Readme Popover Hide on Click Anywhere
+readmePopover.onclick = () => {
+    readmePopover.style.display = 'none';
+    readmePopover.setAttribute('aria-hidden', 'true');
+};
+
 document.getElementById('closeSettings').onclick = ()=>{ document.getElementById('modalShade').style.display='none'; document.getElementById('modalShade').setAttribute('aria-hidden','true'); loadSettings(); };
 document.getElementById('newGame').onclick = ()=>{ 
     score=301; throws=0; hits=0; qualitySum=0; roundThrows=0; 
     lastThree=[]; inPause=false; 
     sectorCounts = {Triple: 0, Double: 0, Single: 0, Bullseye: 0, Bull: 0, Zero: 0}; 
     document.getElementById('pauseLayer').style.display='none'; 
-    resultOverlay.classList.remove('show'); // Beim Neustart auch das permanente Ergebnis ausblenden
+    resultOverlay.classList.remove('show', 'floating'); // Beim Neustart auch die Box ausblenden
     updateUI(); 
     renderBoard(); 
 };
