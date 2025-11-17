@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Big-20 | Dart-Training (v3.22 Sprachsteuerung-Fix)</title>
+<title>Big-20 | Dart-Training (v3.23 Stabilität)</title>
 <style>
 /* 1. Farb-Variablen */
 :root{
@@ -376,7 +376,7 @@ html[data-theme="dark"] .endcard b {
   <div id="dartIcon" class="iconBtn" title="Informationen">
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--dart-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6" stroke="var(--dart-color)" fill="var(--dart-color)"></circle><circle cx="12" cy="12" r="2" stroke="#fff" fill="#fff"></circle></svg>
   </div>
-  <div class="version" id="versionText">v3.22 Sprachsteuerung-Fix</div>
+  <div class="version" id="versionText">v3.23 Stabilität</div>
 </div>
 <button id="newGame">Neues Spiel</button>
 
@@ -426,7 +426,7 @@ html[data-theme="dark"] .endcard b {
   </div>
 </div>
 <script>
-/* Full v3.22 Sprachsteuerung-Fix */
+/* Full v3.23 Stabilität */
 let score=301, throws=0, hits=0, qualitySum=0, roundThrows=0;
 let lastThree=[], inPause=false, wakeLock=null;
 let sectorCounts = {Triple: 0, Double: 0, Single: 0, Bullseye: 0, Bull: 0, Zero: 0};
@@ -461,6 +461,7 @@ const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecogni
 let recognition = null; 
 let isRecognizing = false;
 let isGameStarted = false; // Flag, um sicherzustellen, dass nur während eines Spiels verarbeitet wird
+let wasRecognitionError = false; // NEU: Flag für Fehlerstatus der Erkennung
 
 // **********************************************
 // Speech Recognition Logik
@@ -480,6 +481,7 @@ function setupSpeechRecognition() {
 
     recognition.onstart = () => {
         isRecognizing = true;
+        wasRecognitionError = false; // Bei Start Reset des Fehler-Flags
         micIcon.classList.remove('mic-inactive');
         micIcon.classList.add('mic-active');
         console.log('Spracherkennung gestartet. Höre zu...');
@@ -489,28 +491,33 @@ function setupSpeechRecognition() {
         isRecognizing = false;
         micIcon.classList.remove('mic-active');
         micIcon.classList.add('mic-inactive');
-        console.log('Spracherkennung beendet. Versuch des Auto-Restarts...');
+        console.log('Spracherkennung beendet.');
         
         // Auto-Restart Logik (der Trick für kontinuierliches Hören)
-        // Nur versuchen neu zu starten, wenn das Spiel aktiv ist und der Score > 0 ist
-        if (isGameStarted && score > 0) { 
+        // NEU: Nur neu starten, wenn das Spiel aktiv ist, Score > 0 ist UND KEIN FEHLER aufgetreten ist.
+        if (isGameStarted && score > 0 && !wasRecognitionError) { 
+            console.log('Versuch des Auto-Restarts...');
             setTimeout(startSpeechRecognition, 500);
+        } else if (wasRecognitionError) {
+             console.log('Auto-Restart wegen Fehler in der letzten Sitzung blockiert.');
         }
     };
     
     recognition.onerror = (event) => {
         console.error('Spracherkennungsfehler:', event.error);
+        
+        // NEU: Fehler-Flag setzen, um den Auto-Restart in onend zu verhindern.
+        wasRecognitionError = true; 
+        
         if (event.error === 'not-allowed') {
-             // WICHTIG: Kein automatischer Restart bei fehlender Berechtigung. 
-             // Nutzer muss manuell klicken.
-             alert('Mikrofonzugriff verweigert. Bitte erneut auf das 🎙️-Symbol klicken und die Berechtigung erteilen.');
+             // Informiere den Nutzer, dass er das Mic manuell starten muss
+             alert('Mikrofonzugriff verweigert oder blockiert. Bitte erneut auf das 🎙️-Symbol klicken, um die Berechtigung zu erteilen.');
         } else if (event.error === 'network' || event.error === 'service-not-allowed') {
-            // Bei kritischen Fehlern dennoch versuchen, neu zu starten, wenn im Spiel
-            if (isGameStarted && score > 0) {
-                 setTimeout(startSpeechRecognition, 500);
-            }
+            // Bei kritischen Fehlern dennoch versuchen, die Sitzung zu stoppen, der Auto-Restart wird aber durch das Flag verhindert.
         }
-        if (isRecognizing) recognition.stop();
+        
+        // Stoppt die laufende Sitzung. onend wird ausgelöst und sieht das wasRecognitionError Flag.
+        if (isRecognizing) recognition.stop(); 
     };
 
     recognition.onresult = (event) => {
@@ -525,15 +532,14 @@ function startSpeechRecognition() {
     if (!recognition) return;
     if (isRecognizing) return;
     try {
-        // Der Start der Erkennung muss durch eine aktive Benutzergeste ausgelöst werden (micIcon.onclick)
+        wasRecognitionError = false; // Vor dem Start das Fehler-Flag zurücksetzen
         recognition.start();
     } catch (e) {
         console.warn("Fehler beim Starten der Erkennung:", e.message);
         isRecognizing = false;
         micIcon.classList.remove('mic-active');
         micIcon.classList.add('mic-inactive');
-        // Informiert den Nutzer, dass er ggf. die Seite neu laden muss, wenn der Browser sehr restriktiv ist.
-        alert('Fehler beim Starten der Spracherkennung. Bitte erneut auf das 🎙️-Symbol klicken oder die Seite neu laden, falls der Browser die Berechtigung blockiert.');
+        wasRecognitionError = true; // Fehler-Flag setzen, falls start() fehlschlägt
     }
 }
 
@@ -985,7 +991,7 @@ micIcon.onclick = (e) => {
         startSpeechRecognition(); // Startet die Erkennung und fordert Berechtigung an
     } else if (recognition && isRecognizing) {
         stopSpeechRecognition(); // Stoppt die Erkennung manuell
-        alert('Spracheingabe gestoppt. Klicken Sie erneut auf das Symbol, um fortzufahren.');
+        // Status wird in onend/onerror gesetzt
     }
 };
 
@@ -1011,8 +1017,8 @@ document.getElementById('newGame').onclick = ()=>{
     isGameStarted = true;
     stopSpeechRecognition(); // Stellt sicher, dass alte Sitzungen beendet werden
     
-    // WICHTIGER HINWEIS AN DEN NUTZER
-    alert('Spiel gestartet! Bitte klicken Sie nun einmalig auf das 🎙️ Mikrofon-Symbol unten links, um die freihändige Spracheingabe zu starten.');
+    // NEU: Keine alert() Box mehr. Weniger störender Konsolen-Hinweis.
+    console.log('Spiel gestartet! Bitte klicken Sie nun einmalig auf das 🎙️ Mikrofon-Symbol unten links, um die freihändige Spracheingabe zu starten.');
 
 };
 
