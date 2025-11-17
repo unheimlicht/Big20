@@ -3,21 +3,24 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Big-20 | Dart-Training (v3.23 Stabilität)</title>
+<title>Big-20 | Dart-Training (v3.24 Voice-Mode & Feedback)</title>
 <style>
 /* 1. Farb-Variablen */
 :root{
   --bg:#f5f7fb; --card:#fff; --text:#111; --muted:#666; --accent:#2979ff; --good:#1fa64a; --bad:#d22;
   --dark-bg:#000; --dark-card:#0b0b0b; --dark-text:#eaeaea; --dark-muted:#9a9a9a;
   
-  /* NEU: Farben für Icons */
-  --gear-color: #fdd835; /* Bernstein / Gelb */
-  --dart-color: #e53935; /* Rot */
-  --mic-color-active: #1fa64a; /* Grün für aktiv */
-  --mic-color-inactive: #666; /* Grau für inaktiv */
+  /* NEU: Farben für Icons und Feedback */
+  --gear-color: #fdd835; 
+  --dart-color: #e53935; 
+  --mic-color-active: #1fa64a; 
+  --mic-color-inactive: #666; 
+  --mic-color-busy: #ff9800; /* Orange für Verarbeiten */
+  --feedback-bg: rgba(255, 255, 255, 0.9);
 }
 html[data-theme="dark"]{ 
     --bg:var(--dark-bg); --card:var(--dark-card); --text:var(--dark-text); --muted:var(--dark-muted); 
+    --feedback-bg: rgba(0, 0, 0, 0.9);
 }
 
 /* 2. BODY / Hintergrundbild */
@@ -48,11 +51,7 @@ h1 {
   font-size:20px
 }
 
-/* WUNSCH 1: Leerzeile unter H1 */
-#headlineSpacer {
-    height: 12px; /* Setzt die Leerzeile */
-    display: block; 
-}
+#headlineSpacer { height: 12px; display: block; }
 
 .scoreboard {
   display:flex;justify-content:space-between;align-items:center;
@@ -66,10 +65,38 @@ h1 {
     0 6px 16px rgba(0, 0, 0, 0.3),
     0 12px 40px rgba(0, 0, 0, 0.25);
   padding:12px 14px;
+  transition: all 0.3s ease; /* Übergang für Voice Mode */
 }
+html[data-theme="dark"] .scoreboard {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 .score-details { text-align:right; }
 .score-details #summary { display: block; font-size:13px; font-weight:500; margin-top:4px; color: var(--muted); } 
 .score-details #qualityVal { font-size:20px; font-weight:800; margin-top:6px; }
+
+/* NEU: Voice Mode Scoreboard Styles */
+.scoreboard.voice-mode {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px 14px;
+}
+.scoreboard.voice-mode #restBig {
+    font-size: 60px; /* Deutlich größer */
+}
+.scoreboard.voice-mode .score-details {
+    text-align: center;
+    margin-top: 12px;
+}
+.scoreboard.voice-mode .score-details #summary {
+    font-size: 15px; 
+    margin-top: 0;
+}
+.scoreboard.voice-mode .score-details #qualityVal {
+    font-size: 24px;
+}
+/* ENDE Voice Mode Scoreboard Styles */
 
 
 .btn {
@@ -93,11 +120,14 @@ h1 {
 /* NEUE STYLE FÜR MIKROFON STATUS */
 .mic-active {
     background: var(--card);
-    /* Pulsierender Effekt */
     animation: pulse 1.5s infinite;
 }
 .mic-active svg {
     stroke: var(--mic-color-active);
+}
+.mic-busy svg {
+    stroke: var(--mic-color-busy); /* Orange */
+    animation: none;
 }
 @keyframes pulse {
     0% { box-shadow: 0 0 0 0 rgba(31, 166, 74, 0.7); }
@@ -113,12 +143,12 @@ h1 {
 /* Bestehende Styles */
 #fixedHighscoreFooter {
   position: fixed;
-  bottom: 60px; /* Über den Controls und New Game Button */
+  bottom: 60px;
   left: 0;
   right: 0;
   text-align: center;
-  z-index: 90; /* Unter Controls (z-index 100) */
-  pointer-events: none; /* Klicks gehen durch */
+  z-index: 90;
+  pointer-events: none;
   padding: 0 18px;
   max-width: 960px;
   margin: 0 auto;
@@ -141,10 +171,10 @@ html[data-theme="dark"] #headerHighscore {
 @keyframes flashGreen{0%{box-shadow:0 6px 0 rgba(0,0,0,0.06)}40%{box-shadow:0 28px 48px 12px rgba(40,200,80,0.6)}100%{box-shadow:0 6px 0 rgba(0,0,0,0.06)}}
 @keyframes flashRed{0%{box-shadow:0 6px 0 rgba(0,0,0,0.06)}40%{box-shadow:0 28px 48px 12px rgba(220,40,40,0.6)}100%{box-shadow:0 6px 0 rgba(0,0,0,0.06)}}
 #restBig{text-align:center;font-size:44px;font-weight:900;color:var(--good);margin:6px 0}
-#board{display:flex;justify-content:center;gap:28px;max-width:960px;margin:0 auto;min-height:160px}
+#board{display:flex;justify-content:center;gap:28px;max-width:960px;margin:0 auto;min-height:160px; transition: opacity 0.3s;}
 .col{display:flex;flex-direction:column;align-items:center}
 .undercol{display:flex;flex-direction:column;align-items:center;gap:8px}
-#newGame{position:fixed;right:14px;bottom:14px;background:#e53935;color:#fff;border:0;padding:10px 16px;border-radius:30px;cursor:pointer;z-index:100}
+#newGame{position:fixed;right:14px;bottom:14px;background:#e53935;color:#fff;border:0;padding:10px 16px;border-radius:30px;cursor:pointer;z-index:100; transition: opacity 0.3s;}
 /* footer and controls */
 #controls{position:fixed;left:14px;bottom:14px;display:flex;align-items:center;gap:10px;z-index:100}
 
@@ -164,13 +194,12 @@ html[data-theme="dark"] #headerHighscore {
   align-items: center; 
   gap: 8px; 
 }
-select,input[type="checkbox"]{padding:8px;font-size:14px}
+select,input[type="checkbox"], input[type="radio"]{padding:8px;font-size:14px}
 select {
     flex-grow: 1; 
     min-width: 100px;
     text-align: right; 
 }
-/* Ende Sound-Zuweisungen */
 
 .saveRow{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
 /* sound buttons */
@@ -178,7 +207,7 @@ select {
 .soundGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .small{font-size:13px;color:var(--muted)}
 
-/* WUNSCH 3: Countdown Schrift */
+/* Countdown Schrift */
 .pauseLayer{position:fixed;left:0;right:0;bottom:0;top:0;display:none;align-items:center;justify-content:center;pointer-events:none;z-index:40}
 .pauseShade{
   position:absolute;
@@ -283,8 +312,42 @@ html[data-theme="dark"] .resultOverlay {
 }
 /* Ende NEUE KLASSE */
 
+/* NEUES ELEMENT: Live Speech Feedback */
+#speechInputDisplay {
+    position: fixed;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 150;
+    background: var(--feedback-bg);
+    padding: 8px 14px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    font-size: 16px;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    max-width: 90%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
 
-/* WUNSCH 4: Readme Popover mit Glass-Design */
+#speechInputDisplay.show {
+    opacity: 1;
+}
+
+#speechInputDisplay .processing-val {
+    color: var(--mic-color-busy); /* Orange */
+    font-weight: 800;
+}
+#speechInputDisplay .processed-val {
+    color: var(--muted);
+    font-weight: 400;
+}
+
+/* Readme Popover mit Glass-Design */
 #readmePopover .modal {
     background: rgba(255, 255, 255, 0.7); 
     backdrop-filter: blur(8px) saturate(180%); 
@@ -297,7 +360,6 @@ html[data-theme="dark"] #readmePopover .modal {
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: var(--dark-text);
 }
-/* Ende WUNSCH 4 */
 
 
 /* Endgame Card (gleiche Breite und Form) */
@@ -318,6 +380,7 @@ html[data-theme="dark"] #readmePopover .modal {
   margin-right: auto;
   box-shadow: 0 8px 24px rgba(0,0,0,0.2);
   color: var(--text); 
+  transition: opacity 0.3s;
 }
 html[data-theme="dark"] .endcard {
   background: rgba(0, 0, 0, 0.7); 
@@ -349,7 +412,7 @@ html[data-theme="dark"] .endcard b {
 <h1>Big-20 | Dart-Training</h1>
 <span id="headlineSpacer"></span> 
 
-<div class="scoreboard">
+<div class="scoreboard" id="scoreboard">
   <div><div>Restpunkte</div><div id="restBig">301</div></div>
   
   <div class="score-details">
@@ -357,6 +420,9 @@ html[data-theme="dark"] .endcard b {
     <div id="qualityVal">Wurfqualität: –</div>
   </div>
 </div>
+
+<div id="speechInputDisplay"></div>
+
 <div id="board" aria-live="polite"></div>
 
 <div id="resultOverlay" class="resultOverlay"></div>
@@ -376,7 +442,7 @@ html[data-theme="dark"] .endcard b {
   <div id="dartIcon" class="iconBtn" title="Informationen">
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--dart-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6" stroke="var(--dart-color)" fill="var(--dart-color)"></circle><circle cx="12" cy="12" r="2" stroke="#fff" fill="#fff"></circle></svg>
   </div>
-  <div class="version" id="versionText">v3.23 Stabilität</div>
+  <div class="version" id="versionText">v3.24 Voice-Mode & Feedback</div>
 </div>
 <button id="newGame">Neues Spiel</button>
 
@@ -395,6 +461,14 @@ html[data-theme="dark"] .endcard b {
 <div id="modalShade" class="modalShade" aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
     <h2 id="settingsTitle">Einstellungen</h2>
+    
+    <h3 style="margin-top:12px;margin-bottom:6px">Eingabemodus</h3>
+    <div class="twoCol">
+        <label><input type="radio" name="inputMode" id="modeClick" value="click" checked> Manuell (Buttons)</label>
+        <label><input type="radio" name="inputMode" id="modeVoice" value="voice"> Freihändig (Sprache)</label>
+    </div>
+    <p class="small" style="margin-bottom:12px;">Im "Freihändig" Modus verschwinden die Buttons und Sie geben Treffer per Sprache ein ("plus 60 40 0").</p>
+    
     <div class="row"><label><input type="checkbox" id="keepAwake"> Display-Timeout 5 Minuten verhindern</label></div>
     <div class="row"><label><input type="checkbox" id="darkModeToggle"> Darkmode (Always-On)</label></div>
     <div class="row"><label><input type="checkbox" id="speechToggle"> Sprachausgabe aktivieren (Score-Ansage)</label></div>
@@ -426,19 +500,25 @@ html[data-theme="dark"] .endcard b {
   </div>
 </div>
 <script>
-/* Full v3.23 Stabilität */
+/* Full v3.24 Voice-Mode & Feedback */
 let score=301, throws=0, hits=0, qualitySum=0, roundThrows=0;
 let lastThree=[], inPause=false, wakeLock=null;
 let sectorCounts = {Triple: 0, Double: 0, Single: 0, Bullseye: 0, Bull: 0, Zero: 0};
 let highscore = { quality: 0, hits: 0, throws: 0, avgQ: '– %' }; 
 let speechEnabled = true; // Steuert die Sprachsynthese (Ausgabe)
+let voiceModeEnabled = false; // NEU: Steuert den Voice-Only Mode
 
 const restBig=document.getElementById('restBig'), summary=document.getElementById('summary'), qualityVal=document.getElementById('qualityVal'), board=document.getElementById('board');
+const scoreboardEl=document.getElementById('scoreboard');
 const highscoreEl=document.getElementById('headerHighscore'); 
 const pauseLayer=document.getElementById('pauseLayer'), pauseCount=document.getElementById('pauseCount');
 const resultOverlay=document.getElementById('resultOverlay'); 
+const newGameBtn = document.getElementById('newGame');
+
 const gear=document.getElementById('gear'), modalShade=document.getElementById('modalShade'), closeSettings=document.getElementById('closeSettings'), saveSettings=document.getElementById('saveSettings'), resetData=document.getElementById('resetData');
 const keepAwake=document.getElementById('keepAwake'), darkModeToggle=document.getElementById('darkModeToggle'), speechToggle=document.getElementById('speechToggle');
+const modeClick=document.getElementById('modeClick'), modeVoice=document.getElementById('modeVoice'); // NEU: Mode Radios
+
 const soundGrid=document.getElementById('soundGrid'), sTriple=document.getElementById('sTriple'), sDouble=document.getElementById('sDouble'), sSingle=document.getElementById('sSingle'), sBullseye=document.getElementById('sBullseye'), sBull=document.getElementById('sBull'), sZero=document.getElementById('sZero');
 const qualityMap={60:100,50:83.33,40:66.67,25:41.67,20:33.33,0:0};
 const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -457,11 +537,12 @@ const readmePopover = document.getElementById('readmePopover');
 
 // NEUE SPEECH RECOGNITION VARIABLEN
 const micIcon = document.getElementById('micIcon');
+const speechInputDisplay = document.getElementById('speechInputDisplay'); // NEU: Live Feedback Element
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null; 
 let isRecognizing = false;
-let isGameStarted = false; // Flag, um sicherzustellen, dass nur während eines Spiels verarbeitet wird
-let wasRecognitionError = false; // NEU: Flag für Fehlerstatus der Erkennung
+let isGameStarted = false; 
+let wasRecognitionError = false; 
 
 // **********************************************
 // Speech Recognition Logik
@@ -475,27 +556,27 @@ function setupSpeechRecognition() {
     }
     
     recognition = new SpeechRecognition();
-    recognition.continuous = true; // Wichtig für kontinuierliches Zuhören
+    recognition.continuous = true; 
     recognition.interimResults = false;
-    recognition.lang = 'de-DE'; // Deutsche Sprache bevorzugen
+    recognition.lang = 'de-DE'; 
 
     recognition.onstart = () => {
         isRecognizing = true;
-        wasRecognitionError = false; // Bei Start Reset des Fehler-Flags
-        micIcon.classList.remove('mic-inactive');
+        wasRecognitionError = false; 
+        micIcon.classList.remove('mic-inactive', 'mic-busy');
         micIcon.classList.add('mic-active');
         console.log('Spracherkennung gestartet. Höre zu...');
     };
 
     recognition.onend = () => {
         isRecognizing = false;
-        micIcon.classList.remove('mic-active');
+        micIcon.classList.remove('mic-active', 'mic-busy');
         micIcon.classList.add('mic-inactive');
+        speechInputDisplay.classList.remove('show'); // Feedback-Anzeige ausblenden
         console.log('Spracherkennung beendet.');
         
-        // Auto-Restart Logik (der Trick für kontinuierliches Hören)
-        // NEU: Nur neu starten, wenn das Spiel aktiv ist, Score > 0 ist UND KEIN FEHLER aufgetreten ist.
-        if (isGameStarted && score > 0 && !wasRecognitionError) { 
+        // Auto-Restart Logik
+        if (isGameStarted && score > 0 && !wasRecognitionError && voiceModeEnabled) { // Nur im Voice Mode
             console.log('Versuch des Auto-Restarts...');
             setTimeout(startSpeechRecognition, 500);
         } else if (wasRecognitionError) {
@@ -505,23 +586,17 @@ function setupSpeechRecognition() {
     
     recognition.onerror = (event) => {
         console.error('Spracherkennungsfehler:', event.error);
-        
-        // NEU: Fehler-Flag setzen, um den Auto-Restart in onend zu verhindern.
         wasRecognitionError = true; 
         
         if (event.error === 'not-allowed') {
-             // Informiere den Nutzer, dass er das Mic manuell starten muss
              alert('Mikrofonzugriff verweigert oder blockiert. Bitte erneut auf das 🎙️-Symbol klicken, um die Berechtigung zu erteilen.');
-        } else if (event.error === 'network' || event.error === 'service-not-allowed') {
-            // Bei kritischen Fehlern dennoch versuchen, die Sitzung zu stoppen, der Auto-Restart wird aber durch das Flag verhindert.
         }
         
-        // Stoppt die laufende Sitzung. onend wird ausgelöst und sieht das wasRecognitionError Flag.
         if (isRecognizing) recognition.stop(); 
     };
 
     recognition.onresult = (event) => {
-        if (inPause || score === 0 || !isGameStarted) return;
+        if (inPause || score === 0 || !isGameStarted || !voiceModeEnabled) return; // Nur im Voice Mode verarbeiten
 
         const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
         handleSpeechResult(transcript);
@@ -532,23 +607,43 @@ function startSpeechRecognition() {
     if (!recognition) return;
     if (isRecognizing) return;
     try {
-        wasRecognitionError = false; // Vor dem Start das Fehler-Flag zurücksetzen
+        wasRecognitionError = false; 
         recognition.start();
     } catch (e) {
         console.warn("Fehler beim Starten der Erkennung:", e.message);
         isRecognizing = false;
-        micIcon.classList.remove('mic-active');
+        micIcon.classList.remove('mic-active', 'mic-busy');
         micIcon.classList.add('mic-inactive');
-        wasRecognitionError = true; // Fehler-Flag setzen, falls start() fehlschlägt
+        wasRecognitionError = true; 
     }
 }
 
 function stopSpeechRecognition() {
     if (recognition && isRecognizing) {
         recognition.stop();
-        // onend wird den Status setzen
     }
 }
+
+// NEU: Erweiterte Mapping-Logik
+const dartRecognitionMapping = {
+    // Numerische Werte
+    'null': {points: 0, assign: 'Zero'}, '0': {points: 0, assign: 'Zero'},
+    'zwanzig': {points: 20, assign: 'Single'}, '20': {points: 20, assign: 'Single'},
+    'vierzig': {points: 40, assign: 'Double'}, '40': {points: 40, assign: 'Double'},
+    'sechzig': {points: 60, assign: 'Triple'}, '60': {points: 60, assign: 'Triple'},
+    'fünfundzwanzig': {points: 25, assign: 'Bull'}, '25': {points: 25, assign: 'Bull'},
+    'fünfzig': {points: 50, assign: 'Bullseye'}, '50': {points: 50, assign: 'Bullseye'},
+
+    // Deskriptive Namen (höhere Priorität)
+    'triple zwanzig': {points: 60, assign: 'Triple'},
+    'doppel zwanzig': {points: 40, assign: 'Double'},
+    'single zwanzig': {points: 20, assign: 'Single'},
+    'bull': {points: 25, assign: 'Bull'},
+    'bullseye': {points: 50, assign: 'Bullseye'},
+    'single': {points: 20, assign: 'Single'},
+    'doppel': {points: 40, assign: 'Double'},
+    'triple': {points: 60, assign: 'Triple'},
+};
 
 function handleSpeechResult(transcript) {
     console.log("Erkannt:", transcript);
@@ -556,139 +651,111 @@ function handleSpeechResult(transcript) {
     if (!transcript.startsWith('plus')) return;
 
     let numbersString = transcript.replace('plus', '').trim();
+    
+    // 2. Erkannten Text in eine Zahlensequenz umwandeln (inkl. deskriptiver Namen)
+    const words = numbersString.split(/\s+/).filter(w => w.length > 0);
+    let parsedThrows = [];
+    let i = 0;
+    
+    while (i < words.length) {
+        let matched = null;
+        let matchLength = 0;
 
-    // 2. Erkannten Text in eine Zahlensequenz umwandeln (z.B. 'sechzig vierzig null' zu '60 40 0')
-    const numberMapping = {
-        'null': 0, 'eins': 1, 'zwei': 2, 'drei': 3, 'vier': 4, 'fünf': 5, 'sechs': 6, 'sieben': 7, 'acht': 8, 'neun': 9, 'zehn': 10,
-        'elf': 11, 'zwölf': 12, 'dreizehn': 13, 'vierzehn': 14, 'fünfzehn': 15, 'sechzehn': 16, 'siebzehn': 17, 'achtzehn': 18, 'neunzehn': 19, 'zwanzig': 20,
-        'einundzwanzig': 21, 'zweiundzwanzig': 22, 'dreiundzwanzig': 23, 'vierundzwanzig': 24, 'fünfundzwanzig': 25, 
-        'vierzig': 40, 'fünfzig': 50, 'sechzig': 60,
-        // Eindeutige Treffer für Dart
-        'bull': 25, 'bullseye': 50
-    };
-
-    // Ersetze ausgeschriebene Zahlen durch numerische Ziffern
-    let numbers = numbersString.split(/\s+/).map(word => {
-        if (numberMapping.hasOwnProperty(word)) {
-            return numberMapping[word];
+        // Versuche, 2-Wort-Kombinationen zu matchen (z.B. "triple zwanzig")
+        if (i + 1 < words.length) {
+            const twoWords = words[i] + ' ' + words[i+1];
+            if (dartRecognitionMapping[twoWords]) {
+                matched = dartRecognitionMapping[twoWords];
+                matchLength = 2;
+            }
         }
-        // Lässt numerische Ziffern (z.B. '60') unverändert
-        const num = parseInt(word);
-        return isNaN(num) ? null : num; 
-    }).filter(val => val !== null && val <= 60 && val >= 0); // Nur valide Dart-Werte
+        
+        // Versuche, 1-Wort-Matches zu finden (oder wenn 2-Wort-Match fehlschlägt)
+        if (!matched) {
+            if (dartRecognitionMapping[words[i]]) {
+                matched = dartRecognitionMapping[words[i]];
+                matchLength = 1;
+            } else {
+                // Versuche, numerische Ziffern (z.B. '60') zu parsen
+                const num = parseInt(words[i]);
+                if (!isNaN(num) && dartRecognitionMapping[num.toString()]) {
+                    matched = dartRecognitionMapping[num.toString()];
+                    matchLength = 1;
+                }
+            }
+        }
+        
+        if (matched) {
+            parsedThrows.push(matched);
+            i += matchLength;
+        } else {
+            i++; // Wort überspringen, wenn es nicht gematcht werden kann
+        }
+    }
 
-    // 3. Auf 3 Würfe prüfen (oder weniger, wenn das Spiel zu Ende ist)
-    if (numbers.length === 0 || numbers.length > 3) {
-        speak("Ungültige Eingabe. Bitte nennen Sie bis zu drei Werte nach dem Aktivierungswort.");
+    // 3. Auf 3 Würfe prüfen
+    if (parsedThrows.length === 0 || parsedThrows.length > 3) {
+        // Bei Ungültigkeit Feedback kurz anzeigen und dann ausblenden
+        speechInputDisplay.innerHTML = 'Ungültige Eingabe.';
+        speechInputDisplay.classList.add('show');
+        micIcon.classList.add('mic-busy');
+        setTimeout(() => { 
+            speechInputDisplay.classList.remove('show');
+            micIcon.classList.remove('mic-busy');
+        }, 1500);
         return;
     }
 
-    // 4. Würfe nacheinander verarbeiten
+    // 4. Visuelles Feedback für die Verarbeitung starten
+    micIcon.classList.add('mic-busy');
+    displayLiveFeedback(parsedThrows, -1);
+    
+    // 5. Würfe nacheinander verarbeiten
     let processedThrows = 0;
     
-    // Deaktiviert das Board kurz, um Doppelklicks während der Sprachverarbeitung zu verhindern
-    board.style.pointerEvents = 'none';
-
     function processNextThrow() {
-        // Spielende oder alle Würfe verarbeitet
-        if (processedThrows >= numbers.length || score === 0) {
-            board.style.pointerEvents = 'auto'; // Board wieder aktivieren
+        if (processedThrows >= parsedThrows.length || score === 0) {
+            micIcon.classList.remove('mic-busy'); // Verarbeitung beendet
+            setTimeout(() => speechInputDisplay.classList.remove('show'), 500);
             return;
         }
 
-        const points = numbers[processedThrows];
+        const throwData = parsedThrows[processedThrows];
         
-        // Ermittle den korrekten Zuweisungsschlüssel für die Statistik
-        let assignKey = 'Zero';
-        if (points === 60) assignKey = 'Triple';
-        else if (points === 40) assignKey = 'Double';
-        else if (points === 20) assignKey = 'Single';
-        else if (points === 50) assignKey = 'Bullseye';
-        else if (points === 25) assignKey = 'Bull';
-        
-        // Führt die Haupt-Scoring-Logik aus (aktualisiert Score, Stats, löst Pause aus)
-        scoring(points, points.toString(), assignKey);
+        // Führt die Haupt-Scoring-Logik aus
+        scoring(throwData.points, throwData.assign, throwData.assign); 
         
         processedThrows++;
-        // Verzögerung zwischen den Würfen
+        displayLiveFeedback(parsedThrows, processedThrows); // Feedback-Update
+        
         setTimeout(processNextThrow, 350); 
     }
     
     processNextThrow();
 }
 
+function displayLiveFeedback(throwsArray, currentThrowIndex) {
+    const throwValues = throwsArray.map((data, index) => {
+        const displayValue = data.points.toString();
+        let className = '';
 
-// **********************************************
-// Highscore-Logik 
-// **********************************************
-function getTopThreeSectors(counts) {
-    const sectorArray = Object.keys(counts).map(key => ({
-        label: key === 'Zero' ? '0' : key.replace(/Triple|Double|Single/, (m) => {
-            if(m === 'Triple') return 'Triple-20';
-            if(m === 'Double') return 'Doppel-20';
-            if(m === 'Single') return '20'; 
-            return m;
-        }),
-        count: counts[key]
-    }));
+        if (index < currentThrowIndex) {
+            // Bereits verarbeitet
+            className = 'processed-val';
+        } else if (index === currentThrowIndex) {
+            // Aktuell in Verarbeitung
+            className = 'processing-val';
+        } 
+        
+        // Bei Index < 0 ist es der initiale Zustand (noch nichts verarbeitet)
+        
+        return `<span class="${className}">${displayValue}</span>`;
+    }).join(' | ');
 
-    sectorArray.sort((a, b) => b.count - a.count);
-
-    const topThree = sectorArray.slice(0, 3).filter(s => s.count > 0);
-    
-    if (topThree.length === 0) return '– | – | –';
-    
-    const labels = topThree.map(s => s.label);
-    while (labels.length < 3) {
-        labels.push('–');
-    }
-
-    return labels.join(' | ');
+    speechInputDisplay.innerHTML = `Erkannt: ${throwValues}`;
+    speechInputDisplay.classList.add('show');
 }
 
-function loadHighscore(){
-  try{
-    const hs = JSON.parse(localStorage.getItem('big20_highscore') || '{}');
-    
-    highscore = { quality: 0, hits: 0, throws: 0, avgQ: '– %', topThreeSectors: '– | – | –' }; 
-
-    if (hs.quality !== undefined && (parseInt(hs.quality) > 0 || parseInt(hs.hits) > 0)) {
-        highscore.quality = parseInt(hs.quality) || 0; 
-        highscore.hits = parseInt(hs.hits) || 0;       
-        highscore.throws = parseInt(hs.throws) || 0;   
-        highscore.avgQ = hs.avgQ || '– %';    
-        highscore.topThreeSectors = hs.topThreeSectors || '– | – | –'; 
-    }
-  } catch(e) {
-    console.warn('Highscore konnte nicht geladen werden', e);
-  }
-  updateHighscoreUI(); 
-}
-
-function saveHighscore(finalQuality, finalHits, finalThrows, finalAvgString){
-  const topThreeSectorsString = getTopThreeSectors(sectorCounts);
-
-  if (finalQuality > highscore.quality || (highscore.quality === 0 && finalQuality > 0)) {
-    highscore.quality = finalQuality;
-    highscore.hits = finalHits;
-    highscore.throws = finalThrows;
-    highscore.avgQ = finalAvgString;
-    highscore.topThreeSectors = topThreeSectorsString; 
-    localStorage.setItem('big20_highscore', JSON.stringify(highscore));
-    updateHighscoreUI();
-    return true; 
-  }
-  return false;
-}
-
-function updateHighscoreUI(){
-  const quality = highscore.quality || 0;
-  const hits = highscore.hits || 0;
-  const throws = highscore.throws || 0;
-  const topThree = highscore.topThreeSectors || '– | – | –';
-  
-  highscoreEl.innerHTML = `Highscore: ${quality} % | ${hits} Treffer von ${throws} <br> Top 3: ${topThree}`;
-}
 
 // **********************************************
 // Einstellungs-Logik 
@@ -698,10 +765,13 @@ function loadSettings(){
         const s=JSON.parse(localStorage.getItem('big20_settings')||'{}'); 
         if(s.soundAssign) soundAssign=s.soundAssign; 
         
-        // Sprachsynthese (Ausgabe)
         speechEnabled = s.speechEnabled !== undefined ? s.speechEnabled : true;
         speechToggle.checked = speechEnabled;
         
+        // NEU: Lade Voice Mode
+        voiceModeEnabled = s.voiceModeEnabled !== undefined ? s.voiceModeEnabled : false; 
+        updateModeUI();
+
         if(s.darkMode){ 
             document.documentElement.setAttribute('data-theme','dark'); 
             darkModeToggle.checked=true;
@@ -720,49 +790,66 @@ function loadSettings(){
 
     }catch(e){console.warn(e);} 
 }
+
+function updateModeUI() {
+    // 1. Radio Buttons setzen
+    modeVoice.checked = voiceModeEnabled;
+    modeClick.checked = !voiceModeEnabled;
+    
+    // 2. UI an Modus anpassen (Buttons, Scoreboard Style, NewGame Position)
+    if (voiceModeEnabled) {
+        board.style.opacity = '0';
+        board.style.height = '0';
+        newGameBtn.style.opacity = '0';
+        newGameBtn.style.pointerEvents = 'none';
+        scoreboardEl.classList.add('voice-mode');
+        micIcon.style.display = 'flex';
+        // Wenn das Spiel läuft, starte die Erkennung, um continuous zu sein
+        if(isGameStarted && score > 0) startSpeechRecognition();
+    } else {
+        board.style.opacity = '1';
+        board.style.height = 'auto';
+        newGameBtn.style.opacity = '1';
+        newGameBtn.style.pointerEvents = 'auto';
+        scoreboardEl.classList.remove('voice-mode');
+        micIcon.style.display = 'none'; // Mic Icon nur im Voice Mode
+        stopSpeechRecognition(); // Im Click Mode Mikrofon stoppen
+    }
+}
+
 function saveSettingsToStore(){ 
-    speechEnabled = speechToggle.checked; // Speichert den aktuellen Status
+    speechEnabled = speechToggle.checked; 
+    voiceModeEnabled = modeVoice.checked; // NEU: Speichere Modus
+
     const obj={
         soundAssign, 
         darkMode: !!darkModeToggle.checked, 
         keepAwake: !!keepAwake.checked,
-        speechEnabled: speechEnabled
+        speechEnabled: speechEnabled,
+        voiceModeEnabled: voiceModeEnabled
     }; 
     localStorage.setItem('big20_settings', JSON.stringify(obj)); 
 }
 
-// **********************************************
-// Daten Reset Funktion (Nur Highscore)
-// **********************************************
-function resetAllData() {
-    if (confirm('Sind Sie sicher, dass Sie den gespeicherten Highscore löschen möchten?')) {
-        localStorage.removeItem('big20_highscore');
-        loadHighscore();
-        alert('Der Highscore wurde gelöscht.');
-        document.getElementById('modalShade').style.display='none'; 
-        document.getElementById('modalShade').setAttribute('aria-hidden','true'); 
-    }
-}
 
 // **********************************************
 // RESTLICHE LOGIK (Sound, UI, Spiel)
 // **********************************************
-function buildSoundUI(){ soundGrid.innerHTML=''; soundPresets.forEach((s,i)=>{ const b=document.createElement('button'); b.className='soundBtn'; b.textContent=s.name; b.onclick=()=>playSound(i); soundGrid.appendChild(b); [sTriple,sDouble,sSingle,sBullseye,sBull,sZero].forEach(sel=>{ const opt=document.createElement('option'); opt.value=i; opt.textContent=s.name; sel.appendChild(opt); }); }); sTriple.value=soundAssign.Triple; sDouble.value=soundAssign.Double; sSingle.value=soundAssign.Single; sBullseye.value=soundAssign.Bullseye; sBull.value=soundAssign.Bull; sZero.value=soundAssign.Zero; }
-function playSound(index){ try{ const p=soundPresets[index]; if(!p) return; const o=audioCtx.createOscillator(); const g=audioCtx.createGain(); o.type=p.type; o.frequency.value=p.freq; g.gain.value=0.0001; o.connect(g); g.connect(audioCtx.destination); const now=audioCtx.currentTime; g.gain.setValueAtTime(0.0001,now); g.gain.exponentialRampToValueAtTime(0.18, now+0.005); o.start(now); g.gain.exponentialRampToValueAtTime(0.0001, now+0.18); o.stop(now+0.21); }catch(e){console.warn('audio err',e);} }
-function chooseGermanVoice(){ if(typeof speechSynthesis==='undefined') return null; const voices=speechSynthesis.getVoices(); const maleNames=/(Markus|Michael|Thomas|Peter|Hans|Jan|Mark|David|Daniel|Andreas|Mann|Male|Herr)/i; let v=voices.find(x=>x.lang&&x.lang.startsWith('de')&&maleNames.test(x.name)); if(!v) v=voices.find(x=>x.lang&&x.lang.startsWith('de')); return v||null; }
-function speak(text){ if(!speechEnabled||typeof speechSynthesis==='undefined') return; try{ const v=chooseGermanVoice(); const msg=new SpeechSynthesisUtterance(text); if(v) msg.voice=v; msg.lang='de-DE'; msg.rate=1; msg.pitch=1; speechSynthesis.cancel(); speechSynthesis.speak(msg); }catch(e){console.warn('speech',e);} }
-function computeQualityDisplay(){ 
-    if(throws===0) return 'Wurfqualität: –'; 
-    return 'Wurfqualität: '+Math.round(qualitySum/throws)+' %'; 
-}
 function updateUI(){ 
     restBig.textContent=score; 
     summary.textContent='Treffer: '+hits+' von '+throws; 
     qualityVal.textContent=computeQualityDisplay(); 
     updateHighscoreUI(); 
+    updateModeUI(); // Stellt sicher, dass das UI auch im Spiel richtig ist (z.B. Score < 0)
 } 
 
 function renderBoard(){ 
+    if (voiceModeEnabled) {
+        board.innerHTML = '<div class="endcard" style="opacity:0.8; margin-top:0;">Der Voice-Mode ist aktiv. Bitte starten Sie ein neues Spiel und sagen Sie dann "plus 60 40 0".</div>';
+        return;
+    }
+    
+    // Bestehende Click Mode Logik
     board.innerHTML=''; 
     if(score===0){ return; } 
     if(inPause) { return; }
@@ -772,24 +859,30 @@ function renderBoard(){
 function renderUnder20Centered(s){ board.innerHTML=''; const col=document.createElement('div'); col.className='undercol'; function add(label,val,assign){ const b=document.createElement('button'); b.className='btn'; b.textContent=label; b.onclick=()=>handleClick(b,val,label,assign); col.appendChild(b); } if(s===19) add('19',19,'Single'); else if(s===18){ add('Triple-6',18,'Triple'); add('Doppel-9',18,'Double'); add('18',18,'Single'); } else if(s===17) add('17',17,'Single'); else if(s===16){ add('Doppel-8',16,'Double'); add('16',16,'Single'); } else if(s===15){ add('Triple-5',15,'Triple'); add('15',15,'Single'); } else if(s===14){ add('Doppel-7',14,'Double'); add('14',14,'Single'); } else if(s===13) add('13',13,'Single'); else if(s===12){ add('Triple-4',12,'Triple'); add('Doppel-6',12,'Double'); add('12',12,'Single'); } else if(s===11) add('11',11,'Single'); else if(s===10){ add('Doppel-5',10,'Double'); add('10',10,'Single'); } else if(s===9){ add('Triple-3',9,'Triple'); add('9',9,'Single'); } else if(s===8){ add('Doppel-4',8,'Double'); add('8',8,'Single'); } else if(s===7) add('7',7,'Single'); else if(s===6){ add('Triple-2',6,'Triple'); add('Doppel-3',6,'Double'); add('6',6,'Single'); } else if(s===5) add('5',5,'Single'); else if(s===4){ add('Doppel-2',4,'Double'); add('4',4,'Single'); } else if(s===3){ add('Triple-1',3,'Triple'); add('3',3,'Single'); } else if(s===2){ add('Doppel-1',2,'Double'); add('2',2,'Single'); } else if(s===1) add('1',1,'Single'); add('Null',0,'Zero'); board.appendChild(col); }
 
 function handleClick(btnEl, points, label, assignKey) {
-  if (inPause) return;
-  const isHit = points > 0;
-  
-  btnEl.style.transition = "background-color 0.15s ease";
-  btnEl.style.backgroundColor = isHit ? "rgba(0,255,0,0.6)" : "rgba(255,0,0,0.6)";
-  setTimeout(() => { btnEl.style.backgroundColor = ""; }, 200);
-  if (navigator.vibrate) navigator.vibrate(30);
-  flashVisual(btnEl, isHit);
+    if (inPause) return;
+    const isHit = points > 0;
+    
+    // Temporäres visuelles Feedback (wie in v3.23)
+    btnEl.style.transition = "background-color 0.15s ease";
+    btnEl.style.backgroundColor = isHit ? "rgba(0,255,0,0.6)" : "rgba(255,0,0,0.6)";
+    setTimeout(() => { btnEl.style.backgroundColor = ""; }, 200);
+    if (navigator.vibrate) navigator.vibrate(30);
+    flashVisual(btnEl, isHit);
 
-  const idx = soundAssign[assignKey] !== undefined ? soundAssign[assignKey] : 0;
-  playSound(idx);
+    const idx = soundAssign[assignKey] !== undefined ? soundAssign[assignKey] : 0;
+    playSound(idx);
 
-  scoring(points, label, assignKey);
+    scoring(points, label, assignKey);
 }
+// Unveränderte Funktionen (playSound, cleanSpoken, requestWakeLock, etc.)
+function buildSoundUI(){ soundGrid.innerHTML=''; soundPresets.forEach((s,i)=>{ const b=document.createElement('button'); b.className='soundBtn'; b.textContent=s.name; b.onclick=()=>playSound(i); soundGrid.appendChild(b); [sTriple,sDouble,sSingle,sBullseye,sBull,sZero].forEach(sel=>{ const opt=document.createElement('option'); opt.value=i; opt.textContent=s.name; sel.appendChild(opt); }); }); sTriple.value=soundAssign.Triple; sDouble.value=soundAssign.Double; sSingle.value=soundAssign.Single; sBullseye.value=soundAssign.Bullseye; sBull.value=soundAssign.Bull; sZero.value=soundAssign.Zero; }
+function playSound(index){ try{ const p=soundPresets[index]; if(!p) return; const o=audioCtx.createOscillator(); const g=audioCtx.createGain(); o.type=p.type; o.frequency.value=p.freq; g.gain.value=0.0001; o.connect(g); g.connect(audioCtx.destination); const now=audioCtx.currentTime; g.gain.setValueAtTime(0.0001,now); g.gain.exponentialRampToValueAtTime(0.18, now+0.005); o.start(now); g.gain.exponentialRampToValueAtTime(0.0001, now+0.18); o.stop(now+0.21); }catch(e){console.warn('audio err',e);} }
+function chooseGermanVoice(){ if(typeof speechSynthesis==='undefined') return null; const voices=speechSynthesis.getVoices(); const maleNames=/(Markus|Michael|Thomas|Peter|Hans|Jan|Mark|David|Daniel|Andreas|Mann|Male|Herr)/i; let v=voices.find(x=>x.lang&&x.lang.startsWith('de')&&maleNames.test(x.name)); if(!v) v=voices.find(x=>x.lang&&x.lang.startsWith('de')); return v||null; }
+function speak(text){ if(!speechEnabled||typeof speechSynthesis==='undefined') return; try{ const v=chooseGermanVoice(); const msg=new SpeechSynthesisUtterance(text); if(v) msg.voice=v; msg.lang='de-DE'; msg.rate=1; msg.pitch=1; speechSynthesis.cancel(); speechSynthesis.speak(msg); }catch(e){console.warn('speech',e);} }
+function computeQualityDisplay(){ if(throws===0) return 'Wurfqualität: –'; return 'Wurfqualität: '+Math.round(qualitySum/throws)+' %'; }
 function flashVisual(el,hit){ el.classList.remove('flash-green','flash-red'); void el.offsetWidth; el.classList.add(hit?'flash-green':'flash-red'); setTimeout(()=>{ el.classList.remove('flash-green','flash-red'); },460); }
 function scoring(points,label,assignKey){ 
   
-  // Permanentes Ergebnisanzeige am Anfang jeder neuen Runde ausblenden
   if (roundThrows === 0) { 
       resultOverlay.classList.remove('show', 'floating');
   }
@@ -863,8 +956,9 @@ function startPause(){
   resultOverlay.classList.remove('show');
   resultOverlay.classList.add('floating');
   
+  // WUNSCH ERFÜLLT: Restpunkte ansagen
   if(speechEnabled){ 
-    const spoken = totalPoints + ' — Scorewert ' + avg + ' Prozent'; 
+    const spoken = `${totalPoints} Punkte, Scorewert ${avg} Prozent. Rest ${score}`; 
     speak(cleanSpoken(spoken)); 
   } 
   
@@ -884,8 +978,8 @@ function endPause(){
     inPause=false; 
     
     // 1. Box wird JETZT in die finale (obere) Position animiert
-    resultOverlay.classList.remove('floating'); // Entfernt zentrale Position
-    resultOverlay.classList.add('show');       // Fügt finale Position und Ränder hinzu (s. CSS)
+    resultOverlay.classList.remove('floating'); 
+    resultOverlay.classList.add('show');       
 
     // 2. Pause Layer (Hintergrund und Countdown) ausblenden
     pauseLayer.style.display='none'; 
@@ -896,7 +990,7 @@ function endPause(){
 }
 
 function announceEnd(){ 
-    stopSpeechRecognition(); // Erkennung beenden, wenn das Spiel vorbei ist
+    stopSpeechRecognition();
     
     const finalAvg = throws>0?Math.round(qualitySum/throws):0; 
     const finalHits = hits;
@@ -905,11 +999,8 @@ function announceEnd(){
     
     const isNewHighscore = saveHighscore(finalAvg, finalHits, finalThrows, finalAvgStr);
 
-    // WICHTIG: isGameStarted erst nach Speicherung des Highscores auf false setzen, 
-    // damit die Restart-Logik in onend des recognitions nicht unnötig ausgelöst wird.
     isGameStarted = false;
 
-    // MUSS ausgeblendet werden
     pauseLayer.style.display='none'; 
     pauseLayer.setAttribute('aria-hidden','true'); 
     resultOverlay.classList.remove('show', 'floating'); 
@@ -932,6 +1023,12 @@ function cleanSpoken(s){ let out=s.replace(/–/g,' | '); out = out.replace(/min
 function requestWakeLock(){ try{ if('wakeLock' in navigator){ navigator.wakeLock.request('screen').then(wl=>{ wakeLock=wl; wl.addEventListener('release',()=>{ wakeLock=null; }); }).catch(e=>console.warn('wake lock request failed',e)); } }catch(e){console.warn(e);} }
 function releaseWakeLock(){ try{ if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; } }catch(e){console.warn(e);} }
 if(typeof speechSynthesis!=='undefined'){ speechSynthesis.onvoiceschanged = ()=>{}; }
+function getTopThreeSectors(counts) {const sectorArray = Object.keys(counts).map(key => ({label: key === 'Zero' ? '0' : key.replace(/Triple|Double|Single/, (m) => {if(m === 'Triple') return 'Triple-20';if(m === 'Double') return 'Doppel-20';if(m === 'Single') return '20'; return m;}),count: counts[key]}));sectorArray.sort((a, b) => b.count - a.count);const topThree = sectorArray.slice(0, 3).filter(s => s.count > 0);if (topThree.length === 0) return '– | – | –';const labels = topThree.map(s => s.label);while (labels.length < 3) {labels.push('–');}return labels.join(' | ');}
+function loadHighscore(){try{const hs = JSON.parse(localStorage.getItem('big20_highscore') || '{}');highscore = { quality: 0, hits: 0, throws: 0, avgQ: '– %', topThreeSectors: '– | – | –' };if (hs.quality !== undefined && (parseInt(hs.quality) > 0 || parseInt(hs.hits) > 0)) {highscore.quality = parseInt(hs.quality) || 0;highscore.hits = parseInt(hs.hits) || 0;highscore.throws = parseInt(hs.throws) || 0;highscore.avgQ = hs.avgQ || '– %';highscore.topThreeSectors = hs.topThreeSectors || '– | – | –';}} catch(e) {console.warn('Highscore konnte nicht geladen werden', e);}updateHighscoreUI();}
+function saveHighscore(finalQuality, finalHits, finalThrows, finalAvgString){const topThreeSectorsString = getTopThreeSectors(sectorCounts);if (finalQuality > highscore.quality || (highscore.quality === 0 && finalQuality > 0)) {highscore.quality = finalQuality;highscore.hits = finalHits;highscore.throws = finalThrows;highscore.avgQ = finalAvgString;highscore.topThreeSectors = topThreeSectorsString;localStorage.setItem('big20_highscore', JSON.stringify(highscore));updateHighscoreUI();return true;}return false;}
+function updateHighscoreUI(){const quality = highscore.quality || 0;const hits = highscore.hits || 0;const throws = highscore.throws || 0;const topThree = highscore.topThreeSectors || '– | – | –';highscoreEl.innerHTML = `Highscore: ${quality} % | ${hits} Treffer von ${throws} <br> Top 3: ${topThree}`;}
+function resetAllData() {if (confirm('Sind Sie sicher, dass Sie den gespeicherten Highscore löschen möchten?')) {localStorage.removeItem('big20_highscore');loadHighscore();alert('Der Highscore wurde gelöscht.');document.getElementById('modalShade').style.display='none'; document.getElementById('modalShade').setAttribute('aria-hidden','true');}}
+
 
 // **********************************************
 // EVENT HANDLER
@@ -948,6 +1045,9 @@ document.getElementById('saveSettings').onclick = ()=>{
 
     if(keepAwake.checked) requestWakeLock(); else releaseWakeLock(); 
     
+    voiceModeEnabled = modeVoice.checked; // Lese den neuen Modus
+    updateModeUI(); // UI sofort anpassen
+
     saveSettingsToStore(); 
     document.getElementById('modalShade').style.display='none'; 
     document.getElementById('modalShade').setAttribute('aria-hidden','true'); 
@@ -958,11 +1058,15 @@ resetData.onclick = resetAllData;
 // Gear Icon
 document.getElementById('gear').onclick = ()=>{ 
     readmePopover.style.display='none'; // Close readme if open
+    // Vor dem Öffnen den aktuellen Modus setzen
+    modeVoice.checked = voiceModeEnabled;
+    modeClick.checked = !voiceModeEnabled;
+    
     document.getElementById('modalShade').style.display='flex'; 
     document.getElementById('modalShade').setAttribute('aria-hidden','false'); 
 };
 
-// Dart Icon / Readme Popover Logic
+// Dart Icon / Readme Popover Logic (unverändert)
 dartIcon.onclick = (e) => {
     e.stopPropagation(); 
     document.getElementById('modalShade').style.display='none'; // Close settings if open
@@ -978,20 +1082,21 @@ dartIcon.onclick = (e) => {
     }
 };
 
-// NEU: Mikrofon Icon (Manueller Start/Stopp)
+// Mikrofon Icon (Manueller Start/Stopp - nur relevant im Voice Mode)
 micIcon.onclick = (e) => {
     e.stopPropagation(); 
     
-    if (!isGameStarted) { 
+    if (!voiceModeEnabled) return; // Funktioniert nur im Voice Mode
+    
+    if (!isGameStarted || score === 0) { 
         alert('Bitte starten Sie zuerst ein neues Spiel über den "Neues Spiel" Button.');
         return;
     }
 
     if (recognition && !isRecognizing) {
-        startSpeechRecognition(); // Startet die Erkennung und fordert Berechtigung an
+        startSpeechRecognition(); 
     } else if (recognition && isRecognizing) {
-        stopSpeechRecognition(); // Stoppt die Erkennung manuell
-        // Status wird in onend/onerror gesetzt
+        stopSpeechRecognition(); 
     }
 };
 
@@ -1003,33 +1108,40 @@ readmePopover.onclick = () => {
 
 document.getElementById('closeSettings').onclick = ()=>{ document.getElementById('modalShade').style.display='none'; document.getElementById('modalShade').setAttribute('aria-hidden','true'); loadSettings(); };
 
-// WICHTIG: Der "Neues Spiel" Button startet jetzt NICHT MEHR die Spracherkennung automatisch.
+// WICHTIG: "Neues Spiel" Button startet jetzt das Spiel und ggf. die Spracherkennung
 document.getElementById('newGame').onclick = ()=>{ 
     score=301; throws=0; hits=0; qualitySum=0; roundThrows=0; 
     lastThree=[]; inPause=false; 
     sectorCounts = {Triple: 0, Double: 0, Single: 0, Bullseye: 0, Bull: 0, Zero: 0}; 
     document.getElementById('pauseLayer').style.display='none'; 
     resultOverlay.classList.remove('show', 'floating'); 
-    updateUI(); 
-    renderBoard(); 
     
-    // Flag setzen, dass ein Spiel gestartet ist
     isGameStarted = true;
     stopSpeechRecognition(); // Stellt sicher, dass alte Sitzungen beendet werden
     
-    // NEU: Keine alert() Box mehr. Weniger störender Konsolen-Hinweis.
-    console.log('Spiel gestartet! Bitte klicken Sie nun einmalig auf das 🎙️ Mikrofon-Symbol unten links, um die freihändige Spracheingabe zu starten.');
-
+    // Starte Spracherkennung automatisch, wenn im Voice Mode
+    if (voiceModeEnabled) {
+        startSpeechRecognition();
+        console.log('Spiel und Spracherkennung gestartet.');
+        
+        // Initialer Hinweis für den Voice Mode
+        board.innerHTML = '<div class="endcard" style="opacity:0.8; margin-top:0;">Sagen Sie "plus [Wert] [Wert] [Wert]" (z.B. "plus 60 40 0").</div>';
+    } else {
+        console.log('Spiel gestartet. Eingabe über Buttons.');
+    }
+    
+    updateUI(); // UI muss den neuen Score und Modus zeigen
+    renderBoard(); 
 };
 
 // **********************************************
 // INITIALISIERUNG
 // **********************************************
 setupSpeechRecognition(); 
-renderBoard(); 
 buildSoundUI(); 
 loadHighscore(); 
 loadSettings(); 
+// renderBoard wird von loadSettings/updateModeUI aufgerufen.
 </script>
 </body>
 </html>
