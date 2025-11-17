@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Big-20 | Dart-Training (v3.24 Voice-Mode & Feedback)</title>
+<title>Big-20 | Dart-Training (v3.25 Akkordeon & Live-Ansage)</title>
 <style>
 /* 1. Farb-Variablen */
 :root{
@@ -181,7 +181,13 @@ html[data-theme="dark"] #headerHighscore {
 .version{font-size:11px;color:var(--muted);display:block;text-align:center;margin-top:4px}
 /* settings modal */
 .modalShade{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:none;align-items:center;justify-content:center;z-index:200}
-.modal{background:var(--card);padding:18px;border-radius:12px;min-width:320px;max-width:760px;box-shadow:0 12px 40px rgba(0,0,0,0.25);color:var(--text)}
+/* FIX: Max-Height und Scrollbarkeit für Modal */
+.modal{
+    background:var(--card);padding:18px;border-radius:12px;min-width:320px;max-width:760px;
+    box-shadow:0 12px 40px rgba(0,0,0,0.25);color:var(--text);
+    max-height: 90vh; /* NEU */
+    overflow-y: auto; /* NEU */
+}
 .modal h2{margin:0 0 8px;font-size:18px}
 .row{display:flex;gap:12px;align-items:center;margin:8px 0}
 .col-auto{display:flex;flex-direction:column;gap:8px}
@@ -203,9 +209,53 @@ select {
 
 .saveRow{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
 /* sound buttons */
-.soundBtn{padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:transparent;cursor:pointer}
+.soundBtn{
+    padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:transparent;cursor:pointer;
+    color: var(--text);
+}
+/* FIX: Darkmode Kontrast für Sound Buttons */
+html[data-theme="dark"] .soundBtn {
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.05);
+}
 .soundGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .small{font-size:13px;color:var(--muted)}
+
+/* NEU: Details/Akkordeon Style */
+details {
+    margin: 12px 0;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 8px;
+    padding: 0;
+    overflow: hidden;
+}
+details summary {
+    padding: 10px 14px;
+    cursor: pointer;
+    background: rgba(0,0,0,0.02);
+    font-weight: 600;
+    list-style: none; /* Versteckt den Standardpfeil */
+    position: relative;
+}
+details summary::after {
+    content: '▼';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%) rotate(0deg);
+    transition: transform 0.2s;
+    font-size: 10px;
+}
+details[open] summary::after {
+    transform: translateY(-50%) rotate(180deg);
+}
+html[data-theme="dark"] details {
+    border: 1px solid rgba(255,255,255,0.1);
+}
+html[data-theme="dark"] details summary {
+    background: rgba(255,255,255,0.05);
+}
+/* Ende Details Style */
 
 /* Countdown Schrift */
 .pauseLayer{position:fixed;left:0;right:0;bottom:0;top:0;display:none;align-items:center;justify-content:center;pointer-events:none;z-index:40}
@@ -233,6 +283,13 @@ select {
     0 0 8px rgba(255, 255, 255, 1),
     0 0 16px rgba(255, 255, 255, 0.8),
     0 0 24px rgba(255, 255, 255, 0.6);
+}
+html[data-theme="dark"] .pauseCount {
+    color: #fff;
+    text-shadow: 
+        0 0 8px rgba(0, 0, 0, 1),
+        0 0 16px rgba(0, 0, 0, 0.8),
+        0 0 24px rgba(0, 0, 0, 0.6);
 }
 /* Ende WUNSCH 3 */
 
@@ -312,39 +369,39 @@ html[data-theme="dark"] .resultOverlay {
 }
 /* Ende NEUE KLASSE */
 
-/* NEUES ELEMENT: Live Speech Feedback */
-#speechInputDisplay {
+/* NEUES ELEMENT: Live Throw Feedback (für Sprachverarbeitung) */
+#liveThrowFeedback {
     position: fixed;
-    top: 14px;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
-    z-index: 150;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 300px;
     background: var(--feedback-bg);
-    padding: 8px 14px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    font-size: 16px;
-    font-weight: 600;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    max-width: 90%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    z-index: 200;
+    display: none; /* Wird per JS gesteuert */
     border: 1px solid rgba(0, 0, 0, 0.1);
+    pointer-events: none;
+}
+html[data-theme="dark"] #liveThrowFeedback {
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-#speechInputDisplay.show {
-    opacity: 1;
-}
-
-#speechInputDisplay .processing-val {
-    color: var(--mic-color-busy); /* Orange */
-    font-weight: 800;
-}
-#speechInputDisplay .processed-val {
+.throw-line {
+    font-size: 40px;
+    font-weight: 900;
+    height: 50px; /* Platzhalter */
+    line-height: 50px;
     color: var(--muted);
-    font-weight: 400;
+    transition: color 0.3s ease;
+}
+
+.throw-line.active {
+    color: var(--mic-color-busy); /* Orange */
 }
 
 /* Readme Popover mit Glass-Design */
@@ -421,7 +478,13 @@ html[data-theme="dark"] .endcard b {
   </div>
 </div>
 
-<div id="speechInputDisplay"></div>
+<div id="liveThrowFeedback">
+    <div style="font-size: 14px; font-weight: 500; color: var(--muted); margin-bottom: 8px;">Erkannte Würfe</div>
+    <div id="throw1" class="throw-line"></div>
+    <div id="throw2" class="throw-line"></div>
+    <div id="throw3" class="throw-line"></div>
+</div>
+
 
 <div id="board" aria-live="polite"></div>
 
@@ -437,12 +500,13 @@ html[data-theme="dark"] .endcard b {
   </div>
   
   <div id="gear" class="iconBtn" title="Einstellungen">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--gear-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3" fill="var(--gear-color)" stroke="none"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82-.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0 .33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H12a1.65 1.65 0 0 0 1.51-1V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V12a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--gear-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3" stroke="none" fill="var(--gear-color)"></circle><path d="M12 22s8 0 8-8V10a8 8 0 0 0-8-8 8 8 0 0 0-8 8v4s0 8 8 8z" fill="none"></path><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82-.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0 .33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H12a1.65 1.65 0 0 0 1.51-1V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V12a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
   </div>
+
   <div id="dartIcon" class="iconBtn" title="Informationen">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--dart-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6" stroke="var(--dart-color)" fill="var(--dart-color)"></circle><circle cx="12" cy="12" r="2" stroke="#fff" fill="#fff"></circle></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--dart-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a10 10 0 0 1 10 10 10 10 0 0 1-10 10 10 10 0 0 1-10-10 10 10 0 0 1 10-10z" fill="none"></path><circle cx="12" cy="12" r="6" stroke="var(--dart-color)" fill="none"></circle><circle cx="12" cy="12" r="2" stroke="var(--dart-color)" fill="var(--dart-color)"></circle></svg>
   </div>
-  <div class="version" id="versionText">v3.24 Voice-Mode & Feedback</div>
+  <div class="version" id="versionText">v3.25 Akkordeon & Live-Ansage</div>
 </div>
 <button id="newGame">Neues Spiel</button>
 
@@ -463,35 +527,47 @@ html[data-theme="dark"] .endcard b {
     <h2 id="settingsTitle">Einstellungen</h2>
     
     <h3 style="margin-top:12px;margin-bottom:6px">Eingabemodus</h3>
-    <div class="twoCol">
+    <div class="twoCol" style="margin-bottom: 12px;">
         <label><input type="radio" name="inputMode" id="modeClick" value="click" checked> Manuell (Buttons)</label>
         <label><input type="radio" name="inputMode" id="modeVoice" value="voice"> Freihändig (Sprache)</label>
     </div>
-    <p class="small" style="margin-bottom:12px;">Im "Freihändig" Modus verschwinden die Buttons und Sie geben Treffer per Sprache ein ("plus 60 40 0").</p>
-    
+
     <div class="row"><label><input type="checkbox" id="keepAwake"> Display-Timeout 5 Minuten verhindern</label></div>
     <div class="row"><label><input type="checkbox" id="darkModeToggle"> Darkmode (Always-On)</label></div>
     <div class="row"><label><input type="checkbox" id="speechToggle"> Sprachausgabe aktivieren (Score-Ansage)</label></div>
     
-    <h3 style="margin-top:12px;margin-bottom:6px">Daten</h3>
-    <button id="resetData" class="btn" style="width:auto;background:#e53935;">Highscore-Reset</button>
-    <p class="small">Löscht Highscore aus dem Browser. Einstellungen (Darkmode, Sounds, Timeout) bleiben erhalten.</p>
+    <details>
+        <summary>Sounds testen</summary>
+        <div style="padding: 10px 14px 14px;">
+            <div class="soundGrid" id="soundGrid"></div>
+        </div>
+    </details>
     
-    <h3 style="margin-top:12px;margin-bottom:6px">Sounds testen</h3>
-    <div class="soundGrid" id="soundGrid"></div>
-    <h3 style="margin-top:12px;margin-bottom:6px">Sound-Zuweisungen</h3>
-    <div class="twoCol">
-      <div class="col-auto">
-        <label>Triple-20<select id="sTriple"></select></label>
-        <label>Doppel-20<select id="sDouble"></select></label>
-        <label>Single-20<select id="sSingle"></select></label>
-      </div>
-      <div class="col-auto">
-        <label>Bulls Eye<select id="sBullseye"></select></label>
-        <label>Bull<select id="sBull"></select></label>
-        <label>Null<select id="sZero"></select></label>
-      </div>
-    </div>
+    <details>
+        <summary>Sound-Zuweisungen</summary>
+        <div style="padding: 10px 14px 14px;">
+            <div class="twoCol">
+              <div class="col-auto">
+                <label>Triple-20<select id="sTriple"></select></label>
+                <label>Doppel-20<select id="sDouble"></select></label>
+                <label>Single-20<select id="sSingle"></select></label>
+              </div>
+              <div class="col-auto">
+                <label>Bulls Eye<select id="sBullseye"></select></label>
+                <label>Bull<select id="sBull"></select></label>
+                <label>Null<select id="sZero"></select></label>
+              </div>
+            </div>
+        </div>
+    </details>
+    
+    <details>
+        <summary>Daten & Highscore</summary>
+        <div style="padding: 10px 14px 14px;">
+            <button id="resetData" class="btn" style="width:auto;background:#e53935;">Highscore-Reset</button>
+            <p class="small">Löscht Highscore aus dem Browser. Einstellungen (Darkmode, Sounds, Timeout) bleiben erhalten.</p>
+        </div>
+    </details>
     
     <div class="saveRow">
       <button id="saveSettings" class="btn">Speichern</button>
@@ -500,7 +576,7 @@ html[data-theme="dark"] .endcard b {
   </div>
 </div>
 <script>
-/* Full v3.24 Voice-Mode & Feedback */
+/* Full v3.25 Akkordeon & Live-Ansage */
 let score=301, throws=0, hits=0, qualitySum=0, roundThrows=0;
 let lastThree=[], inPause=false, wakeLock=null;
 let sectorCounts = {Triple: 0, Double: 0, Single: 0, Bullseye: 0, Bull: 0, Zero: 0};
@@ -537,7 +613,8 @@ const readmePopover = document.getElementById('readmePopover');
 
 // NEUE SPEECH RECOGNITION VARIABLEN
 const micIcon = document.getElementById('micIcon');
-const speechInputDisplay = document.getElementById('speechInputDisplay'); // NEU: Live Feedback Element
+const liveThrowFeedback = document.getElementById('liveThrowFeedback'); // NEU: Live Feedback Element
+const throwLines = [document.getElementById('throw1'), document.getElementById('throw2'), document.getElementById('throw3')];
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null; 
 let isRecognizing = false;
@@ -572,7 +649,7 @@ function setupSpeechRecognition() {
         isRecognizing = false;
         micIcon.classList.remove('mic-active', 'mic-busy');
         micIcon.classList.add('mic-inactive');
-        speechInputDisplay.classList.remove('show'); // Feedback-Anzeige ausblenden
+        liveThrowFeedback.style.display = 'none'; // Feedback-Anzeige ausblenden
         console.log('Spracherkennung beendet.');
         
         // Auto-Restart Logik
@@ -627,27 +704,27 @@ function stopSpeechRecognition() {
 // NEU: Erweiterte Mapping-Logik
 const dartRecognitionMapping = {
     // Numerische Werte
-    'null': {points: 0, assign: 'Zero'}, '0': {points: 0, assign: 'Zero'},
-    'zwanzig': {points: 20, assign: 'Single'}, '20': {points: 20, assign: 'Single'},
-    'vierzig': {points: 40, assign: 'Double'}, '40': {points: 40, assign: 'Double'},
-    'sechzig': {points: 60, assign: 'Triple'}, '60': {points: 60, assign: 'Triple'},
-    'fünfundzwanzig': {points: 25, assign: 'Bull'}, '25': {points: 25, assign: 'Bull'},
-    'fünfzig': {points: 50, assign: 'Bullseye'}, '50': {points: 50, assign: 'Bullseye'},
+    'null': {points: 0, assign: 'Zero', speak: 'null'}, '0': {points: 0, assign: 'Zero', speak: 'null'},
+    'zwanzig': {points: 20, assign: 'Single', speak: 'zwanzig'}, '20': {points: 20, assign: 'Single', speak: 'zwanzig'},
+    'vierzig': {points: 40, assign: 'Double', speak: 'vierzig'}, '40': {points: 40, assign: 'Double', speak: 'vierzig'},
+    'sechzig': {points: 60, assign: 'Triple', speak: 'sechzig'}, '60': {points: 60, assign: 'Triple', speak: 'sechzig'},
+    'fünfundzwanzig': {points: 25, assign: 'Bull', speak: 'fünfundzwanzig'}, '25': {points: 25, assign: 'Bull', speak: 'fünfundzwanzig'},
+    'fünfzig': {points: 50, assign: 'Bullseye', speak: 'fünfzig'}, '50': {points: 50, assign: 'Bullseye', speak: 'fünfzig'},
 
     // Deskriptive Namen (höhere Priorität)
-    'triple zwanzig': {points: 60, assign: 'Triple'},
-    'doppel zwanzig': {points: 40, assign: 'Double'},
-    'single zwanzig': {points: 20, assign: 'Single'},
-    'bull': {points: 25, assign: 'Bull'},
-    'bullseye': {points: 50, assign: 'Bullseye'},
-    'single': {points: 20, assign: 'Single'},
-    'doppel': {points: 40, assign: 'Double'},
-    'triple': {points: 60, assign: 'Triple'},
+    'triple zwanzig': {points: 60, assign: 'Triple', speak: 'sechzig'},
+    'doppel zwanzig': {points: 40, assign: 'Double', speak: 'vierzig'},
+    'single zwanzig': {points: 20, assign: 'Single', speak: 'zwanzig'},
+    'bull': {points: 25, assign: 'Bull', speak: 'fünfundzwanzig'},
+    'bullseye': {points: 50, assign: 'Bullseye', speak: 'fünfzig'},
+    'single': {points: 20, assign: 'Single', speak: 'zwanzig'},
+    'doppel': {points: 40, assign: 'Double', speak: 'vierzig'},
+    'triple': {points: 60, assign: 'Triple', speak: 'sechzig'},
 };
 
 function handleSpeechResult(transcript) {
     console.log("Erkannt:", transcript);
-    // 1. Aktivierungswort prüfen und entfernen: "plus"
+    
     if (!transcript.startsWith('plus')) return;
 
     let numbersString = transcript.replace('plus', '').trim();
@@ -678,8 +755,10 @@ function handleSpeechResult(transcript) {
             } else {
                 // Versuche, numerische Ziffern (z.B. '60') zu parsen
                 const num = parseInt(words[i]);
-                if (!isNaN(num) && dartRecognitionMapping[num.toString()]) {
-                    matched = dartRecognitionMapping[num.toString()];
+                // Finde den Eintrag, der zum erkannten numerischen Wert passt (z.B. 60 -> Triple)
+                const numericMatch = Object.values(dartRecognitionMapping).find(m => m.points === num && !m.assign.startsWith('Bull'));
+                if (!isNaN(num) && numericMatch) {
+                    matched = numericMatch;
                     matchLength = 1;
                 }
             }
@@ -696,11 +775,12 @@ function handleSpeechResult(transcript) {
     // 3. Auf 3 Würfe prüfen
     if (parsedThrows.length === 0 || parsedThrows.length > 3) {
         // Bei Ungültigkeit Feedback kurz anzeigen und dann ausblenden
-        speechInputDisplay.innerHTML = 'Ungültige Eingabe.';
-        speechInputDisplay.classList.add('show');
         micIcon.classList.add('mic-busy');
+        liveThrowFeedback.style.display = 'block';
+        throwLines.forEach(el => el.textContent = '');
+        throwLines[0].textContent = 'Ungültige Eingabe';
         setTimeout(() => { 
-            speechInputDisplay.classList.remove('show');
+            liveThrowFeedback.style.display = 'none';
             micIcon.classList.remove('mic-busy');
         }, 1500);
         return;
@@ -708,52 +788,49 @@ function handleSpeechResult(transcript) {
 
     // 4. Visuelles Feedback für die Verarbeitung starten
     micIcon.classList.add('mic-busy');
-    displayLiveFeedback(parsedThrows, -1);
+    liveThrowFeedback.style.display = 'block';
     
+    // Initiales Anzeigen aller erkannten Werte, aber inaktiv
+    throwLines.forEach((el, idx) => {
+        el.textContent = parsedThrows[idx] ? parsedThrows[idx].points.toString() : '';
+        el.classList.remove('active');
+    });
+
     // 5. Würfe nacheinander verarbeiten
     let processedThrows = 0;
     
     function processNextThrow() {
         if (processedThrows >= parsedThrows.length || score === 0) {
             micIcon.classList.remove('mic-busy'); // Verarbeitung beendet
-            setTimeout(() => speechInputDisplay.classList.remove('show'), 500);
+            setTimeout(() => liveThrowFeedback.style.display = 'none', 500);
             return;
         }
 
         const throwData = parsedThrows[processedThrows];
+        const currentLine = throwLines[processedThrows];
         
-        // Führt die Haupt-Scoring-Logik aus
+        // A. Visuelles Update: Aktuellen Wurf hervorheben
+        currentLine.classList.add('active');
+
+        // B. Akustisches Update: Wert ansagen
+        if (speechEnabled) {
+             speak(cleanSpoken(throwData.speak));
+        }
+
+        // C. Scoring-Logik ausführen
         scoring(throwData.points, throwData.assign, throwData.assign); 
         
         processedThrows++;
-        displayLiveFeedback(parsedThrows, processedThrows); // Feedback-Update
         
-        setTimeout(processNextThrow, 350); 
+        // D. Verzögerung, um die Ansage und das visuelle Feedback zu integrieren
+        setTimeout(() => {
+            currentLine.classList.remove('active');
+            processNextThrow();
+        }, 1200); // 1.2s Pause für Ansage + Puffer
     }
     
-    processNextThrow();
-}
-
-function displayLiveFeedback(throwsArray, currentThrowIndex) {
-    const throwValues = throwsArray.map((data, index) => {
-        const displayValue = data.points.toString();
-        let className = '';
-
-        if (index < currentThrowIndex) {
-            // Bereits verarbeitet
-            className = 'processed-val';
-        } else if (index === currentThrowIndex) {
-            // Aktuell in Verarbeitung
-            className = 'processing-val';
-        } 
-        
-        // Bei Index < 0 ist es der initiale Zustand (noch nichts verarbeitet)
-        
-        return `<span class="${className}">${displayValue}</span>`;
-    }).join(' | ');
-
-    speechInputDisplay.innerHTML = `Erkannt: ${throwValues}`;
-    speechInputDisplay.classList.add('show');
+    // Starte nach einer kurzen optischen Pause
+    setTimeout(processNextThrow, 300); 
 }
 
 
@@ -958,6 +1035,8 @@ function startPause(){
   
   // WUNSCH ERFÜLLT: Restpunkte ansagen
   if(speechEnabled){ 
+    // Der Code muss sicherstellen, dass hier nicht die Einzelansage von processNextThrow dazwischenfunkt.
+    // Da startPause() erst nach Beendigung von processNextThrow() aufgerufen wird, ist das hier sicher.
     const spoken = `${totalPoints} Punkte, Scorewert ${avg} Prozent. Rest ${score}`; 
     speak(cleanSpoken(spoken)); 
   } 
@@ -1115,7 +1194,8 @@ document.getElementById('newGame').onclick = ()=>{
     sectorCounts = {Triple: 0, Double: 0, Single: 0, Bullseye: 0, Bull: 0, Zero: 0}; 
     document.getElementById('pauseLayer').style.display='none'; 
     resultOverlay.classList.remove('show', 'floating'); 
-    
+    liveThrowFeedback.style.display = 'none'; // Live Feedback immer ausblenden
+
     isGameStarted = true;
     stopSpeechRecognition(); // Stellt sicher, dass alte Sitzungen beendet werden
     
