@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Dart‑Trainer (v3.29 Multi-Player)</title>
+<title>Dart‑Trainer (v3.28 Loki - 5x5 Grid Fix)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -16,238 +16,439 @@
     --mic-color-inactive: #666; 
     --mic-color-busy: #ff9800; 
     --feedback-bg: rgba(255, 255, 255, 0.9);
-    --player1-color: #2979ff; /* Blau */
-    --player2-color: #e53935; /* Rot */
   }
   html[data-theme="dark"]{ 
       --bg:var(--dark-bg); --card:var(--dark-card); --text:var(--dark-text); --muted:var(--dark-muted); 
       --feedback-bg: rgba(0, 0, 0, 0.9);
   }
 
-  /* -------------------- BODY / Hintergrundbild -------------------- */
-  body{
-      margin:0;padding:18px;font-family:Inter,Arial,sans-serif;
-      /* Aktualisierter Pfad für den Hintergrund, falls das Bild nicht lokal gefunden wird */
-      background: var(--bg) url("https://raw.githubusercontent.com/unheimlicht/Big20/refs/heads/main/20251109_194725-COLLAGE%7E7.jpg") no-repeat center center fixed; 
-      background-size: cover; 
-      background-color: #000; 
-      color:var(--text);-webkit-font-smoothing:antialiased;
-      transition: background-color 0.3s;
-      min-height: 100vh;
-      box-sizing: border-box;
+  /* -------------------- GRUNDLAYOUT & HINTERGRUND (VON LOKI) -------------------- */
+  html,body{
+    height:100%;
+    margin:0;
+    font-family:Inter,Arial,sans-serif;
+    /* Hintergrundbild vom Original-Code übernommen */
+    background:url('https://raw.githubusercontent.com/unheimlicht/Big20/refs/heads/main/20251118_125553-COLLAGE%7E4.jpg')
+               center / cover no-repeat fixed;
+    overflow:hidden;
+    color:var(--text);
   }
   html[data-theme="dark"] body { 
-      background: var(--dark-bg);
-      background-image: none !important;
+    background: var(--dark-bg);
+    background-image: none !important;
   }
 
-  /* -------------------- Optische Verbesserungen -------------------- */
-  h1 { text-shadow: 0 0 6px rgba(255, 255, 255, 0.8), 0 0 12px rgba(255, 255, 255, 0.6); letter-spacing: 0.5px; text-align:center; margin:8px 0 0; font-size:20px }
-  #headlineSpacer { height: 12px; display: block; }
-  
-  /* NEU: Multi-Player Scoreboard */
-  .scoreboard{
-      display:grid; 
-      grid-template-columns: 1fr auto 1fr; /* Links, Mitte (Infos), Rechts */
-      align-items:center;
-      background: rgba(255, 255, 255, 0.4); 
-      backdrop-filter: blur(18px) saturate(200%); 
-      -webkit-backdrop-filter: blur(18px) saturate(200%);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 16px;
-      max-width:960px;margin:0 auto 12px;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3), 0 12px 40px rgba(0, 0, 0, 0.25);
-      padding:12px 14px;
-      gap: 10px; /* Abstand zwischen den Spalten */
+  .wrapper{ display:flex; flex-direction:column; height:100%; }
+
+  /* -------------------- Header (transparent) -------------------- */
+  header{
+    backdrop-filter:blur(6px);
+    background:rgba(255,255,255,0.4);
+    padding:.5rem 1rem;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:.2rem;
+    z-index:10;
   }
-  .player-score-box { text-align: center; }
-  .player-score-box #restBig { margin: 0; font-size: 38px; }
-  .player-score-box .player-name { font-size: 14px; font-weight: 600; margin-top: 4px; color: var(--muted); }
-  .player-score-box.active { 
-    transform: scale(1.05); 
-    border-radius: 10px;
-    padding: 5px;
-    background: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+  html[data-theme="dark"] header {
+    background:rgba(0,0,0,0.4);
+  }
+
+  header h1{
+    margin:0;
+    font-size:1.4rem;             
+    font-weight:700;
+    color:var(--text);
+    text-shadow:0 1px 3px rgba(0,0,0,0.2);
+  }
+  .highscore{
+    margin:0;
+    font-size:1.0rem;             
+    color:var(--good);                  
+    font-weight:600;
+    text-shadow:0 0 3px rgba(255,255,255,0.5);
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  /* -------------------- Footer -------------------- */
+  footer{
+    backdrop-filter:blur(6px);
+    background:rgba(255,255,255,0.4);
+    padding:.5rem 1rem;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:1rem;
+    z-index:10;
+  }
+  html[data-theme="dark"] footer {
+    background:rgba(0,0,0,0.4);
+  }
+  /* ICONS */
+  .icon-btn{ 
+    background:none; border:none; font-size:1.6rem; cursor:pointer; 
+    display: flex; align-items: center; justify-content: center; 
+    width: 32px; height: 32px;
+  }
+  .icon-btn svg { width: 24px; height: 24px; }
+
+  .new-game{
+    background:#c62828; color:#fff; border:none; border-radius:4px;
+    padding:.4rem .9rem; font-weight:600; cursor:pointer; font-size:.95rem;
+  }
+  
+  /* NEU: Mic Icon Style */
+  .mic-inactive svg { stroke: var(--mic-color-inactive); }
+  .mic-active svg { stroke: var(--mic-color-active); animation: pulse 1.5s infinite; }
+  .mic-busy svg { stroke: var(--mic-color-busy); animation: none; }
+  @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(31, 166, 74, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(31, 166, 74, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(31, 166, 74, 0); }
+  }
+
+
+  /* -------------------- Main -------------------- */
+  main{
+    flex:1 0 auto;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    gap:1.2rem;
+    overflow-y:auto;
+    padding-top:1rem; padding-bottom:1rem;
+  }
+
+  /* -------------------- Ergebnis‑Box (Milchglas) -------------------- */
+  .glass-box{
+    width:85%; max-width:340px;
+    background:rgba(255,255,255,0.15);   
+    backdrop-filter:blur(8px);
+    border-radius:12px; padding:1rem; text-align:center;
+    box-shadow:0 4px 12px rgba(0,0,0,0.4);   
     transition: all 0.3s ease;
   }
-  html[data-theme="dark"] .player-score-box.active {
-    background: rgba(0, 0, 0, 0.2);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+  html[data-theme="dark"] .glass-box {
+    background:rgba(0,0,0,0.15);
   }
-  .player-score-box.active .player-name { 
-    color: var(--text); 
+  .glass-box h2{ margin:0 0 .4rem; font-size:2.5rem; font-weight:900; color:var(--good); }
+  .glass-box p{ margin:0; font-size:.95rem; color:var(--text); }
+  .glass-box #summary, .glass-box #qualityVal { font-size: 1rem; margin-top: 4px; }
+  .glass-box #qualityVal { font-weight: 700; color:var(--text); }
+
+  /* Voice Mode Scoreboard Styles */
+  .glass-box.voice-mode {
+    padding: 1.5rem 1rem;
   }
-  #p1ScoreBox.active .player-name { color: var(--player1-color); }
-  #p2ScoreBox.active .player-name { color: var(--player2-color); }
-
-  .game-details { text-align:center; }
-  .game-details #summary { display: block; font-size:13px; font-weight:500; margin-top:4px; color: var(--muted); } 
-  .game-details #qualityVal { font-size:20px; font-weight:800; margin-top:6px; }
-
-  /* Single-Player Scoreboard (Fallback/Initial State) */
-  .scoreboard.single-player {
-    display: flex;
-    justify-content: space-between;
+  .glass-box.voice-mode h2 {
+    font-size: 3.5rem; 
   }
-  .scoreboard.single-player .player-score-box:last-child { display: none; }
-  .scoreboard.single-player .player-score-box:first-child { text-align: left; }
+  .glass-box.voice-mode p {
+    font-size: 1.1rem; 
+  }
+  /* ENDE Voice Mode Scoreboard Styles */
 
-  /* -------------------- Buttons & Highscore -------------------- */
-  .btn { width:150px;padding:12px;margin:6px;border-radius:10px;border:0;background:var(--accent);color:#fff;font-size:16px;cursor:pointer; box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4); transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.15s ease; }
-  .btn:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), 0 4px 10px rgba(0, 128, 255, 0.4); }
-  .btn:active { transform: translateY(1px) scale(0.97); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
-  .btn:disabled{opacity:.5;cursor:not-allowed;background:#e9e9ea;color:#777;box-shadow:none}
-  html[data-theme="dark"] .btn:disabled { background: var(--dark-muted); color: #444; }
 
-  .flash-green{animation:flashGreen .45s ease-out}
-  .flash-red{animation:flashRed .45s ease-out}
-  @keyframes flashGreen{0%{box-shadow:0 6px 0 rgba(0,0,0,0.06)}40%{box-shadow:0 28px 48px 12px rgba(40,200,80,0.6)}100%{box-shadow:0 6px 0 rgba(0,0,0,0.06)}}
-  @keyframes flashRed{0%{box-shadow:0 6px 0 rgba(0,0,0,0.06)}40%{box-shadow:0 28px 48px 12px rgba(220,40,40,0.6)}100%{box-shadow:0 6px 0 rgba(0,0,0,0.06)}}
+  /* -------------------- Button‑Anordnung um den Mittelpunkt -------------------- */
+  #dart-center{
+    position:absolute;
+    left:50%; top:50%;
+    transform:translate(-50%,-50%);
+    display:flex;
+    gap:2.5rem;             
+    z-index:3;
+  }
+  /* #board: Container für die Buttons. Im Big-20 Modus enthält es zwei .col Elemente */
+  #board {
+      /* display: flex oder display: grid wird jetzt dynamisch gesetzt */
+  }
   
-  #board{display:flex;justify-content:center;gap:28px;max-width:960px;margin:0 auto;min-height:160px}
-  .col{display:flex;flex-direction:column;align-items:center}
+  /* NEU: 301 Modus Grid */
+  #board.grid-5x5 {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-auto-rows: 1fr; /* Damit die Reihen gleich hoch sind */
+      gap: 12px; /* Kleinerer Abstand für das 5x5 Grid */
+      max-width: 480px; /* Optional: Um das Grid auf Mobilgeräten zu begrenzen */
+      padding: 10px;
+  }
   
-  #fixedHighscoreFooter {
-    position: fixed;
-    bottom: 60px; 
-    left: 0;
-    right: 0;
-    text-align: center;
-    z-index: 90; 
-    pointer-events: none; 
-    padding: 0 18px;
-    max-width: 960px;
-    margin: 0 auto;
+  .col{
+    display:flex;
+    flex-direction:column;
+    gap:.8rem;
   }
-  #headerHighscore {
-    text-shadow: 0 0 4px rgba(255, 255, 255, 1), 0 0 8px rgba(255, 255, 255, 0.8);
-    letter-spacing: 0.5px;
-    font-size: 20px; 
-    font-weight: 800; 
-    color: var(--text);
-    line-height: 1.3;
+  .col.left  { align-items:flex-end; }
+  .col.right { align-items:flex-start; }
+
+  /* -------------------- Buttons -------------------- */
+  .dart-btn{
+    min-width:125px;          
+    min-height:60px;          
+    border:none; border-radius:8px;
+    background:rgba(30,136,229,0.4);   
+    color:#fff; font-size:.95rem; font-weight:600;
+    cursor:pointer;
+    box-shadow:0 8px 16px rgba(0,0,0,0.6);   
+    transition:transform .15s ease,
+                box-shadow .15s ease,
+                background .15s ease;
   }
-  html[data-theme="dark"] #headerHighscore {
-      text-shadow: 0 0 4px rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 0, 0, 0.6); 
-      color: var(--dark-text);
+  /* Style für 301 Buttons */
+  #board.grid-5x5 .dart-btn {
+      min-width: 60px;
+      min-height: 60px;
+      padding: 0;
+      font-size: 1.2rem; /* Größere Schrift für die Zahlen */
+      background: rgba(30, 136, 229, 0.4); 
+  }
+  
+  .dart-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 12px 20px rgba(0,0,0,0.7);
+    background:rgba(21,101,192,0.4);   
+  }
+  .dart-btn:disabled{
+    opacity:.4; cursor:not-allowed;
+    transform:none; box-shadow:none;
+  }
+  
+  /* Flash Animation für Buttons */
+  .dart-btn.flash-green{ animation:flashGreen .45s ease-out; background:rgba(31, 166, 74, 0.6) !important; }
+  .dart-btn.flash-red{ animation:flashRed .45s ease-out; background:rgba(210, 34, 34, 0.6) !important; }
+  /* NEU: Multiplikator Modus Aktiv */
+  .dart-btn.active-multiplier { background: rgba(255, 193, 7, 0.7) !important; box-shadow: 0 0 10px rgba(255, 193, 7, 1); }
+
+  @keyframes flashGreen{0%{box-shadow:0 8px 16px rgba(0,0,0,0.6)}40%{box-shadow:0 28px 48px 12px rgba(40,200,80,0.8)}100%{box-shadow:0 8px 16px rgba(0,0,0,0.6)}}
+  @keyframes flashRed{0%{box-shadow:0 8px 16px rgba(0,0,0,0.6)}40%{box-shadow:0 28px 48px 12px rgba(220,40,40,0.8)}100%{box-shadow:0 8px 16px rgba(0,0,0,0.6)}}
+
+  /* -------------------- Responsives Verhalten -------------------- */
+  @media (max-width:480px){
+    .dart-btn{ min-width:110px; }   
+    .glass-box { max-width: 90%; }
+    
+    #board.grid-5x5 {
+        gap: 8px; 
+        max-width: 320px; 
+    }
+    #board.grid-5x5 .dart-btn {
+        min-width: 50px;
+        min-height: 50px;
+        font-size: 1.0rem;
+    }
   }
 
-  /* -------------------- End Card / Overlays -------------------- */
-  .resultOverlay {
-    /* ... (CSS für resultOverlay unverändert übernommen) ... */
-    max-width: 960px; margin: 0 auto; background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(18px) saturate(200%); -webkit-backdrop-filter: blur(18px) saturate(200%); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 16px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3), 0 12px 40px rgba(0, 0, 0, 0.25); padding: 12px 14px; color: var(--text); text-align: center; opacity: 0; max-height: 0; overflow: hidden; margin-bottom: 0px; margin-top: 0px; position: relative; transition: opacity 0.4s ease, max-height 0.4s ease, margin-top 0.4s ease, transform 0.4s ease, top 0.4s ease, width 0.4s ease; z-index: 50; display: flex; justify-content: space-between; align-items: center; 
-  }
-  html[data-theme="dark"] .resultOverlay {
-    background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-  .resultOverlay.show {
-    opacity: 1; max-height: 200px; margin-top: 24px; margin-bottom: 70px; transform: none; top: auto; width: auto;
-  }
-  .resultOverlay.floating {
-      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -150%); width: 90%; max-width: 450px; padding: 18px 20px; opacity: 1; max-height: 200px; margin-top: 0; margin-bottom: 0; z-index: 50; 
-  }
 
-  .endcard{
-    text-align:center; margin-top: 24px; font-size:20px; font-weight:700; line-height:1.5; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-radius: 16px; padding: 12px 14px; width: 100%; max-width: 960px; margin-left: auto; margin-right: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.2); color: var(--text); 
+  /* -------------------- V3.26/27 MODAL & LAYER STYLES -------------------- */
+  .modalShade{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:200}
+  .modal{
+      background:var(--card);padding:18px;border-radius:12px;min-width:320px;max-width:760px;
+      box-shadow:0 12px 40px rgba(0,0,0,0.4);color:var(--text);
+      max-height: 90vh; 
+      overflow-y: auto; 
   }
-  html[data-theme="dark"] .endcard { background: rgba(0, 0, 0, 0.7); color: var(--dark-text); }
-  .endcard b { text-shadow: 0 0 3px rgba(255, 255, 255, 0.6), 0 0 6px rgba(255, 255, 255, 0.4); }
-  html[data-theme="dark"] .endcard b { text-shadow: 0 0 3px rgba(0, 0, 0, 0.6), 0 0 6px rgba(0, 0, 0, 0.4); }
-
-
-  /* -------------------- Pause Layer -------------------- */
-  .pauseLayer{position:fixed;left:0;right:0;bottom:0;top:0;display:none;align-items:center;justify-content:center;pointer-events:none;z-index:40}
-  .pauseShade{ position:absolute; inset:0; background:rgba(0,0,0,0.1); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); pointer-events:auto }
-  .pauseInfo{ position:relative; z-index:41; text-align:center; pointer-events:none; transform: translateY(0px); }
-  .pauseCount{ font-size:80px; font-weight:900; color: #000; margin-bottom:12px; text-shadow: 0 0 8px rgba(255, 255, 255, 1), 0 0 16px rgba(255, 255, 255, 0.8), 0 0 24px rgba(255, 255, 255, 0.6); }
-
-  /* -------------------- Modal / Controls -------------------- */
-  #newGame{ position:fixed; right:14px; bottom:14px; background:#e53935; color:#fff; border:0; padding:10px 16px; border-radius:30px; cursor:pointer; z-index:100 }
-  #controls{position:fixed;left:14px;bottom:14px;display:flex;align-items:center;gap:10px;z-index:100}
-  .iconBtn{width:44px;height:44px;border-radius:8px;background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
-  .version{font-size:11px;color:var(--muted);display:block;text-align:center;margin-top:4px}
-  .modalShade{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:none;align-items:center;justify-content:center;z-index:200}
-  .modal{background:var(--card);padding:18px;border-radius:12px;min-width:320px;max-width:760px;box-shadow:0 12px 40px rgba(0,0,0,0.25);color:var(--text)}
   .modal h2{margin:0 0 8px;font-size:18px}
+  .modal h3{margin:12px 0 6px; font-size: 16px;}
   .row{display:flex;gap:12px;align-items:center;margin:8px 0}
   .col-auto{display:flex;flex-direction:column;gap:8px}
   .twoCol{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .col-auto label { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-  select,input[type="checkbox"]{padding:8px;font-size:14px}
+  select,input[type="checkbox"], input[type="radio"]{padding:8px;font-size:14px}
   select { flex-grow: 1; min-width: 100px; text-align: right; }
   .saveRow{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
-  .soundBtn{padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:transparent;cursor:pointer}
+  .btn { width:auto; padding:10px 18px; margin:0; border-radius:8px; border:0; background:var(--accent); color:#fff; font-size:15px; cursor:pointer; }
+  .btn:hover { background:var(--accent); } 
+  .btn:active { transform: scale(0.97); }
+
+  /* Sound Buttons */
+  .soundBtn{ padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:transparent;cursor:pointer; color: var(--text); }
+  html[data-theme="dark"] .soundBtn { border: 1px solid rgba(255, 255, 255, 0.15); background: rgba(255, 255, 255, 0.05); }
   .soundGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .small{font-size:13px;color:var(--muted)}
-  .modal select, .modal input[type="text"], .modal input[type="checkbox"] + label {
-    color: var(--text); background-color: var(--card); 
+  
+  /* Akkordeon Style */
+  details { margin: 12px 0; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; padding: 0; overflow: hidden; }
+  details summary { padding: 10px 14px; cursor: pointer; background: rgba(0,0,0,0.02); font-weight: 600; list-style: none; position: relative; }
+  details summary::after { content: '▼'; position: absolute; right: 14px; top: 50%; transform: translateY(-50%) rotate(0deg); transition: transform 0.2s; font-size: 10px; }
+  details[open] summary::after { transform: translateY(-50%) rotate(180deg); }
+  html[data-theme="dark"] details { border: 1px solid rgba(255,255,255,0.1); }
+  html[data-theme="dark"] details summary { background: rgba(255,255,255,0.05); }
+  
+  /* Countdown Layer */
+  .pauseLayer{position:fixed;left:0;right:0;bottom:0;top:0;display:none;align-items:center;justify-content:center;pointer-events:none;z-index:40}
+  .pauseShade{
+    position:absolute; inset:0; background:rgba(0,0,0,0.1); 
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); pointer-events:auto
+  }
+  .pauseInfo{ position:relative; z-index:41; text-align:center; pointer-events:none; transform: translateY(0px); }
+  .pauseCount{
+    font-size:80px; font-weight:900; color: #000; margin-bottom:12px;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 1), 0 0 16px rgba(255, 255, 255, 0.8);
+  }
+  html[data-theme="dark"] .pauseCount {
+      color: #fff;
+      text-shadow: 0 0 8px rgba(0, 0, 0, 1), 0 0 16px rgba(0, 0, 0, 0.8);
   }
   
-  /* Media Queries */
-  @media (max-width:720px){ 
-    .modal{width:92%} 
-    .pauseCount{font-size:60px} 
-    .btn{width:130px} 
-    .resultOverlay.show { margin-bottom: 70px; margin-top: 24px; } 
-    #fixedHighscoreFooter { bottom: 70px; }
-    .scoreboard { padding: 8px 10px; }
-    .player-score-box #restBig { font-size: 32px; }
-    .game-details #qualityVal { font-size: 16px; }
-    .game-details #summary { font-size: 12px; }
+  /* Result Overlay */
+  .resultOverlay {
+    width: 85%; max-width:340px; 
+    background: rgba(255, 255, 255, 0.4); 
+    backdrop-filter: blur(12px) saturate(200%); 
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    padding: 1rem;
+    color: var(--text);
+    text-align: center;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden; 
+    margin: 0 auto;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -150%);
+    transition: opacity 0.4s ease, transform 0.4s ease, max-height 0.4s ease;
+    z-index: 50; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
   }
+  html[data-theme="dark"] .resultOverlay {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .resultOverlay.show {
+    opacity: 1;
+    max-height: 200px; 
+    transform: translate(-50%, -350%); 
+  }
+
+  /* Live Throw Feedback (Echtzeit Ansage) */
+  #liveThrowFeedback {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 300px;
+    background: var(--feedback-bg);
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    z-index: 200;
+    display: none; 
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    pointer-events: none;
+  }
+  html[data-theme="dark"] #liveThrowFeedback { border: 1px solid rgba(255, 255, 255, 0.1); }
+  .throw-line {
+    font-size: 40px;
+    font-weight: 900;
+    height: 50px; 
+    line-height: 50px;
+    color: var(--muted);
+    transition: color 0.3s ease;
+  }
+  .throw-line.active { color: var(--mic-color-busy); }
+
+  /* Endgame Card */
+  .endcard{
+    text-align:center;
+    margin-top: 24px; 
+    font-size:18px;
+    font-weight:700;
+    line-height:1.5;
+    background: rgba(255, 255, 255, 0.7); 
+    backdrop-filter: blur(8px);
+    border-radius: 12px; 
+    padding: 1rem; 
+    width: 85%; max-width:340px; 
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    color: var(--text); 
+    transition: opacity 0.3s;
+  }
+  html[data-theme="dark"] .endcard {
+    background: rgba(0, 0, 0, 0.7); 
+  }
+  
+  /* Game Mode Selection Modal */
+  .game-select-btn {
+      width: 100%;
+      padding: 20px;
+      margin-bottom: 12px;
+      border: 1px solid var(--muted);
+      border-radius: 8px;
+      background: var(--bg);
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: all 0.2s;
+  }
+  .game-select-btn:hover {
+      background: var(--card);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      transform: translateY(-2px);
+  }
+
 </style>
 </head>
+
 <body>
-<h1>Big-20 | Dart-Training</h1>
-<span id="headlineSpacer"></span> 
+<div class="wrapper">
 
-<div class="scoreboard single-player" id="mainScoreboard">
-  <div class="player-score-box active" id="p1ScoreBox">
-      <div id="restBig">301</div>
-      <div class="player-name" id="p1Name">P1 (Du)</div>
-  </div>
-  
-  <div class="game-details">
-    <div id="summary">Treffer: 0 von 0</div>
-    <div id="qualityVal">Wurfqualität: –</div>
-  </div>
+  <header>
+    <h1>Big‑20 | Dart‑Trainer</h1>
+    <p class="highscore" id="headerHighscore">Highscore: -</p>
+  </header>
 
-  <div class="player-score-box" id="p2ScoreBox">
-      <div id="p2RestBig">301</div>
-      <div class="player-name" id="p2Name">P2 (Gegner)</div>
-  </div>
-</div>
-
-<div id="board" aria-live="polite">
-    <div class="col">
-        <button class="btn" data-points="60" data-assign="Triple" onclick="handleClick(this,60,'Triple-20','Triple')">Triple-20</button>
-        <button class="btn" data-points="40" data-assign="Double" onclick="handleClick(this,40,'Doppel-20','Double')">Doppel-20</button>
-        <button class="btn" data-points="20" data-assign="Single" onclick="handleClick(this,20,'Single-20','Single')">Single-20</button>
+  <main>
+    <div class="glass-box" id="game-status-box">
+      <h2 id="restBig">301</h2>
+      <p id="summary">Treffer: 0 von 0</p>
+      <p id="qualityVal">Wurfqualität: –</p>
     </div>
-    <div class="col">
-        <button class="btn" data-points="50" data-assign="Bullseye" onclick="handleClick(this,50,'Bulls Eye','Bullseye')">Bulls Eye</button>
-        <button class="btn" data-points="25" data-assign="Bull" onclick="handleClick(this,25,'Bull','Bull')">Bull</button>
-        <button class="btn" data-points="0" data-assign="Zero" onclick="handleClick(this,0,'Null','Zero')">Null</button>
+
+    <div id="dart-center">
+      <div id="resultOverlay" class="resultOverlay"></div>
+      
+      <div id="board">
+        </div>
     </div>
+  </main>
+
+  <footer>
+    <button id="micIcon" class="icon-btn mic-inactive" title="Spracheingabe starten/stoppen">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--mic-color-inactive)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+    </button>
+
+    <button class="icon-btn" id="gear" title="Einstellungen">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--gear-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3" stroke="none" fill="var(--gear-color)"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82-.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0 .33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H12a1.65 1.65 0 0 0 1.51-1V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V12a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+    </button>
+    
+    <div style="display:flex;align-items:center;gap:.4rem;">
+      <span id="dartIcon" style="height:24px;width:24px;" title="Informationen">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--dart-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a10 10 0 0 1 10 10 10 10 0 0 1-10 10 10 10 0 0 1-10-10 10 10 0 0 1 10-10z" fill="none"></path><circle cx="12" cy="12" r="6" stroke="var(--dart-color)" fill="none"></circle><circle cx="12" cy="12" r="2" stroke="var(--dart-color)" fill="var(--dart-color)"></circle></svg>
+      </span>
+      <small id="app-version" style="color:var(--muted)">v3.28 Loki</small>
+    </div>
+    <button class="new-game" id="newGame">Neues Spiel</button>
+  </footer>
 </div>
 
-<div id="resultOverlay" class="resultOverlay"></div>
-
-<div id="fixedHighscoreFooter">
-  <div id="headerHighscore">Highscore: -</div>
+<div id="liveThrowFeedback">
+    <div style="font-size: 14px; font-weight: 500; color: var(--muted); margin-bottom: 8px;">Erkannte Würfe</div>
+    <div id="throw1" class="throw-line"></div>
+    <div id="throw2" class="throw-line"></div>
+    <div id="throw3" class="throw-line"></div>
 </div>
-
-<div id="controls">
-  <div id="gear" class="iconBtn" title="Einstellungen">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--gear-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3" fill="var(--gear-color)" stroke="none"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82-.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0-.33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0 .33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H12a1.65 1.65 0 0 0 1.51-1V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V12a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-  </div>
-  <div id="dartIcon" class="iconBtn" title="Informationen">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--dart-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6" stroke="var(--dart-color)" fill="var(--dart-color)"></circle><circle cx="12" cy="12" r="2" stroke="#fff" fill="#fff"></circle></svg>
-  </div>
-  <div class="version" id="versionText">v3.29 Multi-Player</div>
-</div>
-<button id="newGame">Neues Spiel starten</button>
 
 <div id="readmePopover" class="modalShade" style="z-index: 250;">
     <div class="modal" role="alert" aria-live="polite" style="max-width: 400px; text-align: center; cursor: pointer;">
@@ -255,481 +456,761 @@
     </div>
 </div>
 
+<div id="gameSelectionModal" class="modalShade" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="gameSelectTitle" style="min-width: 300px; max-width: 400px; text-align: center;">
+        <h2 id="gameSelectTitle" style="margin-bottom: 1.5rem;">Spielmodus wählen</h2>
+        <button class="game-select-btn" data-mode="big20">
+            Big-20 Training <br> <span style="font-size: 0.8rem; font-weight: 400;">(Nur 20er-Feld und Bulls)</span>
+        </button>
+        <button class="game-select-btn" data-mode="301">
+            301 Regional <br> <span style="font-size: 0.8rem; font-weight: 400;">(Alle Felder gelten, mathematisches Finish)</span>
+        </button>
+    </div>
+</div>
+
 <div id="pauseLayer" class="pauseLayer" aria-hidden="true">
   <div class="pauseShade"></div>
   <div class="pauseInfo" role="status" aria-live="polite">
     <div class="pauseCount" id="pauseCount">5</div>
-    <div style="font-size: 20px; font-weight: 700; color: var(--text); background: var(--feedback-bg); padding: 8px 16px; border-radius: 8px; margin-top: 20px;" id="playerSwitchText"></div>
   </div>
 </div>
+
 <div id="modalShade" class="modalShade" aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
-    <h2 id="settingsTitle">Einstellungen & Spiel-Modus</h2>
+    <h2 id="settingsTitle">Einstellungen</h2>
     
-    <h3 style="margin-top:12px;margin-bottom:6px">Spiel-Modus</h3>
-    <div class="row">
-        <label>
-            Spieleranzahl:
-            <select id="playerCountSelect" onchange="updatePlayerNames()">
-                <option value="1">1 Spieler (301)</option>
-                <option value="2">2 Spieler (301)</option>
-            </select>
-        </label>
+    <h3 style="margin-top:12px;margin-bottom:6px">Eingabemodus</h3>
+    <div class="twoCol" style="margin-bottom: 12px;">
+        <label><input type="radio" name="inputMode" id="modeClick" value="click" checked> Manuell (Buttons)</label>
+        <label><input type="radio" name="inputMode" id="modeVoice" value="voice"> Freihändig (Sprache)</label>
     </div>
-    <div class="row">
-        <label>Spieler 1 Name: <input type="text" id="p1Input" value="P1 (Du)" oninput="updatePlayerNames(true)"></label>
-    </div>
-    <div class="row" id="p2Row" style="display:none;">
-        <label>Spieler 2 Name: <input type="text" id="p2Input" value="P2 (Gegner)" oninput="updatePlayerNames(true)"></label>
-    </div>
-    <button id="startGameFromSettings" class="btn" style="width:auto;background:var(--good);margin-top:10px;">Spiel starten</button>
 
-    <h3 style="margin-top:12px;margin-bottom:6px">App-Einstellungen</h3>
     <div class="row"><label><input type="checkbox" id="keepAwake"> Display-Timeout 5 Minuten verhindern</label></div>
     <div class="row"><label><input type="checkbox" id="darkModeToggle"> Darkmode (Always-On)</label></div>
+    <div class="row"><label><input type="checkbox" id="speechToggle"> Sprachausgabe aktivieren (Score-Ansage)</label></div>
     
-    <h3 style="margin-top:12px;margin-bottom:6px">Daten</h3>
-    <button id="resetData" class="btn" style="width:auto;background:#e53935;">Highscore-Reset</button>
-    <p class="small">Löscht Highscore aus dem Browser. Einstellungen (Darkmode, Sounds, Timeout) bleiben erhalten.</p>
+    <details>
+        <summary>Sounds testen</summary>
+        <div style="padding: 10px 14px 14px;">
+            <div class="soundGrid" id="soundGrid"></div>
+        </div>
+    </details>
     
-    <h3 style="margin-top:12px;margin-bottom:6px">Sound-Zuweisungen</h3>
-    <div class="soundGrid" id="soundGrid"></div>
-    <div class="twoCol">
-      <div class="col-auto">
-        <label>Triple-20<select id="sTriple"></select></label>
-        <label>Doppel-20<select id="sDouble"></select></label>
-        <label>Single-20<select id="sSingle"></select></label>
-      </div>
-      <div class="col-auto">
-        <label>Bulls Eye<select id="sBullseye"></select></label>
-        <label>Bull<select id="sBull"></select></label>
-        <label>Null<select id="sZero"></select></label>
-      </div>
-    </div>
+    <details>
+        <summary>Sound-Zuweisungen</summary>
+        <div style="padding: 10px 14px 14px;">
+            <div class="twoCol">
+              <div class="col-auto">
+                <label>Triple-20<select id="sTriple"></select></label>
+                <label>Doppel-20<select id="sDouble"></select></label>
+                <label>Single-20<select id="sSingle"></select></label>
+              </div>
+              <div class="col-auto">
+                <label>Bulls Eye<select id="sBullseye"></select></label>
+                <label>Bull<select id="sBull"></select></label>
+                <label>Null<select id="sZero"></select></label>
+              </div>
+            </div>
+        </div>
+    </details>
+    
+    <details>
+        <summary>Daten & Highscore</summary>
+        <div style="padding: 10px 14px 14px;">
+            <button id="resetData" class="btn" style="background:#e53935;">Highscore-Reset</button>
+            <p class="small">Löscht Highscore aus dem Browser. Einstellungen (Darkmode, Sounds, Timeout) bleiben erhalten.</p>
+        </div>
+    </details>
+    
     <div class="saveRow">
-      <button id="saveSettings" class="btn">Einstellungen speichern</button>
+      <button id="saveSettings" class="btn">Speichern</button>
       <button id="closeSettings" class="btn" style="background:#ddd;color:#111">Schließen</button>
     </div>
   </div>
 </div>
+
 <script>
-// **********************************************
-// Globale Zustände (Jetzt als Spieler-Array)
-// **********************************************
-const initialScore = 301;
-let players = [];
-let currentPlayerIndex = 0;
-let isMultiplayer = false;
-let inPause = false; 
-let wakeLock = null; 
-let highscore = { quality: 0, hits: 0, throws: 0, avgQ: '– %', topThreeSectors: '– | – | –' }; 
+/* ---------- FUNKTIONALITÄT VON V3.28 (5x5 Grid Fix) ---------- */
+let score=301, throws=0, hits=0, qualitySum=0, roundThrows=0;
+let lastThree=[], inPause=false, wakeLock=null;
+let sectorCounts = {Triple: 0, Double: 0, Single: 0, Bullseye: 0, Bull: 0, Zero: 0};
+let highscore = { quality: 0, hits: 0, throws: 0, avgQ: '– %' }; 
+let speechEnabled = true; 
+let voiceModeEnabled = false; 
+let activeGameMode = 'big20'; // big20 oder 301
 
-const restBig=document.getElementById('restBig'), summary=document.getElementById('summary'), qualityVal=document.getElementById('qualityVal');
-const p1ScoreBox = document.getElementById('p1ScoreBox'), p2ScoreBox = document.getElementById('p2ScoreBox');
-const p1NameEl = document.getElementById('p1Name'), p2NameEl = document.getElementById('p2Name');
-const p2RestBig = document.getElementById('p2RestBig');
-const mainScoreboard = document.getElementById('mainScoreboard');
+// NEU: Zustand für den Multiplikator-Modus (nur für 301)
+let multiplierMode = null; // Kann 'Triple' oder 'Double' sein
 
-const board=document.getElementById('board');
+// UI Elemente MAPPING
+const restBig=document.getElementById('restBig'), summary=document.getElementById('summary'), qualityVal=document.getElementById('qualityVal'), board=document.getElementById('board');
+const scoreboardEl=document.getElementById('game-status-box');
 const highscoreEl=document.getElementById('headerHighscore'); 
-const pauseLayer=document.getElementById('pauseLayer'), pauseCount=document.getElementById('pauseCount'), playerSwitchText = document.getElementById('playerSwitchText');
+const pauseLayer=document.getElementById('pauseLayer'), pauseCount=document.getElementById('pauseCount');
 const resultOverlay=document.getElementById('resultOverlay'); 
+const newGameBtn = document.getElementById('newGame');
+const gameSelectionModal = document.getElementById('gameSelectionModal'); 
+
 const gear=document.getElementById('gear'), modalShade=document.getElementById('modalShade'), closeSettings=document.getElementById('closeSettings'), saveSettings=document.getElementById('saveSettings'), resetData=document.getElementById('resetData');
-const keepAwake=document.getElementById('keepAwake'), darkModeToggle=document.getElementById('darkModeToggle');
-const soundGrid=document.getElementById('soundGrid'), sTriple=document.getElementById('sTriple'), sDouble=document.getElementById('sDouble'), sSingle=document.getElementById('sSingle'), sBullseye=document.getElementById('sBullseye'), sBull=document.getElementById('sBull'), sZero=document.getElementById('sZero');
-const qualityMap={60:100,50:83.33,40:66.67,25:41.67,20:33.33,0:0};
+const keepAwake=document.getElementById('keepAwake'), darkModeToggle=document.getElementById('darkModeToggle'), speechToggle=document.getElementById('speechToggle');
+const modeClick=document.getElementById('modeClick'), modeVoice=document.getElementById('modeVoice'); 
+
+const soundGrid=document.getElementById('soundGrid'), sTriple=document.getElementById('sTriple'), sDouble=document.getElementById('sDouble'), sSingle=document.getElementById('sSingle'), sBullseye=document.getElementById('sBullseye'), sBull=document.getElementById('sZero'), sZero=document.getElementById('sZero');
+const qualityMap={60:100,50:83.33,40:66.67,25:41.67,20:33.33,0:0}; // Nur für Big-20 relevant
 const AudioContextClass = window.AudioContext || window.webkitAudioContext;
 const audioCtx = new AudioContextClass();
-const soundPresets=[ {name:'Click 1',type:'sine',freq:800},{name:'Click 2',type:'sine',freq:1000},{name:'Pop',type:'square',freq:600}, {name:'Beep',type:'sine',freq:1100},{name:'Tock',type:'triangle',freq:700},{name:'Ping',type:'sine',freq:1400}, {name:'Blip',type:'square',freq:900},{name:'Clack',type:'triangle',freq:650},{name:'Ding',type:'sine',freq:1200}, {name:'Tick',type:'square',freq:500},{name:'Zing',type:'sawtooth',freq:1500},{name:'Tone',type:'sine',freq:400} ];
+const soundPresets=[
+  {name:'Click 1',type:'sine',freq:800},{name:'Click 2',type:'sine',freq:1000},{name:'Pop',type:'square',freq:600},
+  {name:'Beep',type:'sine',freq:1100},{name:'Tock',type:'triangle',freq:700},{name:'Ping',type:'sine',freq:1400},
+  {name:'Blip',type:'square',freq:900},{name:'Clack',type:'triangle',freq:650},{name:'Ding',type:'sine',freq:1200},
+  {name:'Tick',type:'square',freq:500},{name:'Zing',type:'sawtooth',freq:1500},{name:'Tone',type:'sine',freq:400}
+];
 let soundAssign={Triple:0,Double:1,Single:2,Bullseye:3,Bull:4,Zero:5};
 
-// Readme Elemente
 const dartIcon = document.getElementById('dartIcon');
 const readmePopover = document.getElementById('readmePopover');
 
-// Einstellungs-Elemente für Multiplayer
-const playerCountSelect = document.getElementById('playerCountSelect');
-const p1Input = document.getElementById('p1Input');
-const p2Input = document.getElementById('p2Input');
-const p2Row = document.getElementById('p2Row');
-const startGameFromSettings = document.getElementById('startGameFromSettings');
+const micIcon = document.getElementById('micIcon');
+const liveThrowFeedback = document.getElementById('liveThrowFeedback'); 
+const throwLines = [document.getElementById('throw1'), document.getElementById('throw2'), document.getElementById('throw3')];
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null; 
+let isRecognizing = false;
+let isGameStarted = false; 
+let wasRecognitionError = false; 
+
 
 // **********************************************
-// Initialisierung und Player-Setup
+// SPEECH RECOGNITION LOGIK (Unverändert)
 // **********************************************
+function setupSpeechRecognition() {
+    if (!SpeechRecognition) {
+        micIcon.style.display = 'none';
+        return;
+    }
+    recognition = new SpeechRecognition();
+    recognition.continuous = true; 
+    recognition.interimResults = false;
+    recognition.lang = 'de-DE'; 
+    recognition.onstart = () => { isRecognizing = true; wasRecognitionError = false; micIcon.classList.remove('mic-inactive', 'mic-busy'); micIcon.classList.add('mic-active'); };
+    recognition.onend = () => { isRecognizing = false; micIcon.classList.remove('mic-active', 'mic-busy'); micIcon.classList.add('mic-inactive'); liveThrowFeedback.style.display = 'none'; if (isGameStarted && score > 0 && !wasRecognitionError && voiceModeEnabled) { setTimeout(startSpeechRecognition, 500); } };
+    recognition.onerror = (event) => { console.error('Spracherkennungsfehler:', event.error); wasRecognitionError = true; if (event.error === 'not-allowed') { alert('Mikrofonzugriff verweigert oder blockiert. Bitte erneut auf das 🎙️-Symbol klicken, um die Berechtigung zu erteilen.'); } if (isRecognizing) recognition.stop(); };
+    recognition.onresult = (event) => { if (inPause || score === 0 || !isGameStarted || !voiceModeEnabled) return; const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim(); handleSpeechResult(transcript); };
+}
+function startSpeechRecognition() {
+    if (!recognition || isRecognizing) return;
+    try { wasRecognitionError = false; recognition.start(); } 
+    catch (e) { isRecognizing = false; micIcon.classList.remove('mic-active', 'mic-busy'); micIcon.classList.add('mic-inactive'); wasRecognitionError = true; }
+}
+function stopSpeechRecognition() { if (recognition && isRecognizing) { recognition.stop(); } }
 
-function initializePlayers(numPlayers, p1Name, p2Name) {
-    currentPlayerIndex = 0;
-    isMultiplayer = numPlayers > 1;
+// Mapping für Big-20 (wird für 301 bei Bedarf erweitert)
+const dartRecognitionMapping = {
+    'null': {points: 0, assign: 'Zero', speak: 'null'}, '0': {points: 0, assign: 'Zero', speak: 'null'},
+    'zwanzig': {points: 20, assign: 'Single', speak: 'zwanzig'}, '20': {points: 20, assign: 'Single', speak: 'zwanzig'},
+    'vierzig': {points: 40, assign: 'Double', speak: 'vierzig'}, '40': {points: 40, assign: 'Double', speak: 'vierzig'},
+    'sechzig': {points: 60, assign: 'Triple', speak: 'sechzig'}, '60': {points: 60, assign: 'Triple', speak: 'sechzig'},
+    'fünfundzwanzig': {points: 25, assign: 'Bull', speak: 'fünfundzwanzig'}, '25': {points: 25, assign: 'Bull', speak: 'fünfundzwanzig'},
+    'fünfzig': {points: 50, assign: 'Bullseye', speak: 'fünfzig'}, '50': {points: 50, assign: 'fünfzig', speak: 'fünfzig'},
+    'triple zwanzig': {points: 60, assign: 'Triple', speak: 'sechzig'},
+    'doppel zwanzig': {points: 40, assign: 'Double', speak: 'vierzig'},
+    'single zwanzig': {points: 20, assign: 'Single', speak: 'zwanzig'},
+    'bull': {points: 25, assign: 'Bull', speak: 'fünfundzwanzig'}, 'bulls eye': {points: 50, assign: 'Bullseye', speak: 'fünfzig'},
+    'single': {points: 20, assign: 'Single', speak: 'zwanzig'}, 'doppel': {points: 40, assign: 40, speak: 'vierzig'}, 'triple': {points: 60, assign: 'Triple', speak: 'sechzig'},
+};
 
-    // Lade Namen aus LocalStorage oder verwende Defaults
-    const storedP1Name = localStorage.getItem('big20_p1Name') || p1Name;
-    const storedP2Name = localStorage.getItem('big20_p2Name') || p2Name;
-
-    players = [
-        { 
-            name: storedP1Name,
-            score: initialScore,
-            scoreBeforeBust: initialScore,
-            throws: 0,
-            hits: 0,
-            qualitySum: 0,
-            roundThrows: 0,
-            lastThree: [],
-            sectorCounts: {Triple: 0, Double: 0, Single: 0, Bullseye: 0, Bull: 0, Zero: 0}
+function handleSpeechResult(transcript) {
+    // ... Implementierung für 301-Spracherkennung wird später benötigt
+    console.log("Erkannt:", transcript);
+    if (activeGameMode === '301') {
+        // Hier müsste die komplexere Logik für D20, T19, etc. folgen. 
+        // Vorerst nur eine Warnung im 301-Modus, bis die Logik steht.
+        micIcon.classList.add('mic-busy');
+        liveThrowFeedback.style.display = 'block';
+        throwLines.forEach(el => el.textContent = '');
+        throwLines[0].textContent = '301 Sprach-Modus noch nicht implementiert';
+        setTimeout(() => { 
+            liveThrowFeedback.style.display = 'none';
+            micIcon.classList.remove('mic-busy');
+        }, 2000);
+        return;
+    }
+    
+    // Bestehende Big-20 Logik für den Big-20 Modus
+    if (!transcript.startsWith('plus')) return;
+    let numbersString = transcript.replace('plus', '').trim();
+    const words = numbersString.split(/\s+/).filter(w => w.length > 0);
+    let parsedThrows = [];
+    let i = 0;
+    
+    // [... Bestehende Big-20 Parsing Logik ...]
+    while (i < words.length) {
+        let matched = null;
+        let matchLength = 0;
+        if (i + 1 < words.length) {
+            const twoWords = words[i] + ' ' + words[i+1];
+            if (dartRecognitionMapping[twoWords]) {
+                matched = dartRecognitionMapping[twoWords];
+                matchLength = 2;
+            }
         }
-    ];
-
-    if (isMultiplayer) {
-        players.push({
-            name: storedP2Name,
-            score: initialScore,
-            scoreBeforeBust: initialScore,
-            throws: 0,
-            hits: 0,
-            qualitySum: 0,
-            roundThrows: 0,
-            lastThree: [],
-            sectorCounts: {Triple: 0, Double: 0, Single: 0, Bullseye: 0, Bull: 0, Zero: 0}
-        });
-        
-        // Update Scoreboard UI für Multi-Player
-        mainScoreboard.classList.remove('single-player');
-        p1NameEl.textContent = players[0].name;
-        p2NameEl.textContent = players[1].name;
-        p2NameEl.parentElement.style.display = 'block'; // Zeige P2 Score Box
-        
-    } else {
-        // Update Scoreboard UI für Single-Player
-        mainScoreboard.classList.add('single-player');
-        p1NameEl.textContent = players[0].name;
-        p2NameEl.parentElement.style.display = 'none'; // Verstecke P2 Score Box
-    }
-}
-
-function updatePlayerNames(save=false) {
-    const isMulti = playerCountSelect.value === '2';
-    
-    // Update Modal UI
-    p2Row.style.display = isMulti ? 'flex' : 'none';
-    
-    // Update in-game UI (nur wenn nicht gerade ein Spiel läuft)
-    if (players.length > 0) {
-        p1NameEl.textContent = p1Input.value;
-        if (isMulti) {
-            p2NameEl.textContent = p2Input.value;
+        if (!matched) {
+            if (dartRecognitionMapping[words[i]]) {
+                matched = dartRecognitionMapping[words[i]];
+                matchLength = 1;
+            } else {
+                const num = parseInt(words[i]);
+                const numericMatch = Object.values(dartRecognitionMapping).find(m => m.points === num && !m.assign.startsWith('Bull'));
+                if (!isNaN(num) && numericMatch) {
+                    matched = numericMatch;
+                    matchLength = 1;
+                }
+            }
+        }
+        if (matched) {
+            parsedThrows.push(matched);
+            i += matchLength;
+        } else {
+            i++; 
         }
     }
+    // [ENDE Big-20 Parsing Logik]
 
-    if (save) {
-        localStorage.setItem('big20_p1Name', p1Input.value);
-        localStorage.setItem('big20_p2Name', p2Input.value);
-    }
-}
-
-// **********************************************
-// Highscore-Logik (unverändert, gilt nur für den aktuellen Spieler)
-// **********************************************
-function getTopThreeSectors(counts) {
-    const sectorArray = Object.keys(counts).map(key => ({
-        label: key === 'Zero' ? '0' : key.replace(/Triple|Double|Single/, (m) => {
-            if(m === 'Triple') return 'Triple-20';
-            if(m === 'Double') return 'Doppel-20';
-            if(m === 'Single') return '20'; 
-            return m;
-        }),
-        count: counts[key]
-    }));
-
-    sectorArray.sort((a, b) => b.count - a.count);
-
-    const topThree = sectorArray.slice(0, 3).filter(s => s.count > 0);
-    
-    if (topThree.length === 0) return '– | – | –';
-    
-    const labels = topThree.map(s => s.label + (s.count > 0 ? ` (${s.count})` : ''));
-    while (labels.length < 3) {
-        labels.push('–');
+    if (parsedThrows.length === 0 || parsedThrows.length > 3) {
+        micIcon.classList.add('mic-busy');
+        liveThrowFeedback.style.display = 'block';
+        throwLines.forEach(el => el.textContent = '');
+        throwLines[0].textContent = 'Ungültige Eingabe';
+        setTimeout(() => { liveThrowFeedback.style.display = 'none'; micIcon.classList.remove('mic-busy'); }, 1500);
+        return;
     }
 
-    return labels.join(' | ');
-}
+    micIcon.classList.add('mic-busy');
+    liveThrowFeedback.style.display = 'block';
+    throwLines.forEach((el, idx) => { el.textContent = parsedThrows[idx] ? parsedThrows[idx].points.toString() : ''; el.classList.remove('active'); });
 
-function loadHighscore(){
-  try{
-    const hs = JSON.parse(localStorage.getItem('big20_highscore') || '{}');
-    
-    highscore = { quality: 0, hits: 0, throws: 0, avgQ: '– %', topThreeSectors: '– | – | –' }; 
-
-    if (hs.quality !== undefined && (parseInt(hs.quality) > 0 || parseInt(hs.hits) > 0)) {
-        highscore.quality = parseInt(hs.quality) || 0; 
-        highscore.hits = parseInt(hs.hits) || 0;       
-        highscore.throws = parseInt(hs.throws) || 0;   
-        highscore.avgQ = hs.avgQ || '– %';    
-        highscore.topThreeSectors = hs.topThreeSectors || '– | – | –'; 
+    let processedThrows = 0;
+    function processNextThrow() {
+        if (processedThrows >= parsedThrows.length || score === 0) {
+            micIcon.classList.remove('mic-busy'); setTimeout(() => liveThrowFeedback.style.display = 'none', 500); checkPause(); return;
+        }
+        const throwData = parsedThrows[processedThrows];
+        const currentLine = throwLines[processedThrows];
+        currentLine.classList.add('active');
+        if (navigator.vibrate) navigator.vibrate(30);
+        if (speechEnabled) { speak(cleanSpoken(throwData.speak)); }
+        scoring(throwData.points, throwData.assign, throwData.assign); 
+        processedThrows++;
+        setTimeout(() => { currentLine.classList.remove('active'); processNextThrow(); }, 1200); 
     }
-  } catch(e) {
-    console.warn('Highscore konnte nicht geladen werden', e);
-  }
-  updateHighscoreUI(); 
+    setTimeout(processNextThrow, 300); 
 }
 
-function saveHighscore(finalQuality, finalHits, finalThrows, finalAvgString, sectorCounts){
-  const topThreeSectorsString = getTopThreeSectors(sectorCounts);
-
-  if (finalQuality > highscore.quality || (highscore.quality === 0 && finalQuality > 0)) {
-    highscore.quality = finalQuality;
-    highscore.hits = finalHits;
-    highscore.throws = finalThrows;
-    highscore.avgQ = finalAvgString;
-    highscore.topThreeSectors = topThreeSectorsString; 
-    localStorage.setItem('big20_highscore', JSON.stringify(highscore));
-    updateHighscoreUI();
-    return true; 
-  }
-  return false;
-}
-
-function updateHighscoreUI(){
-  const quality = highscore.quality || 0;
-  const hits = highscore.hits || 0;
-  const throws = highscore.throws || 0;
-  const topThree = highscore.topThreeSectors || '– | – | –';
-  
-  // Zeilenumbruch vor Top 3, kein senkrechter Strich
-  highscoreEl.innerHTML = `Highscore: ${quality} % | ${hits} Treffer von ${throws} <br> Top 3: ${topThree}`;
-}
 
 // **********************************************
-// Einstellungs-Logik (unverändert)
+// EINSTELLUNGEN & UI LOGIK (Unverändert)
 // **********************************************
 function loadSettings(){ 
     try{ 
         const s=JSON.parse(localStorage.getItem('big20_settings')||'{}'); 
         if(s.soundAssign) soundAssign=s.soundAssign; 
-        
-        if(s.darkMode){ 
-            document.documentElement.setAttribute('data-theme','dark'); 
-            darkModeToggle.checked=true;
-        } else { 
-            document.documentElement.removeAttribute('data-theme');
-            darkModeToggle.checked=false;
-        }
-        
-        if(s.keepAwake){ 
-            keepAwake.checked=true; 
-            requestWakeLock(); 
-        } else {
-            keepAwake.checked=false;
-            releaseWakeLock();
-        }
-        
-        // Multi-Player Settings
-        const numPlayers = parseInt(localStorage.getItem('big20_numPlayers') || '1');
-        playerCountSelect.value = numPlayers;
-        p1Input.value = localStorage.getItem('big20_p1Name') || 'P1 (Du)';
-        p2Input.value = localStorage.getItem('big20_p2Name') || 'P2 (Gegner)';
-        updatePlayerNames(); // Update UI
+        speechEnabled = s.speechEnabled !== undefined ? s.speechEnabled : true;
+        speechToggle.checked = speechEnabled;
+        voiceModeEnabled = s.voiceModeEnabled !== undefined ? s.voiceModeEnabled : false; 
+        updateModeUI();
+        if(s.darkMode){ document.documentElement.setAttribute('data-theme','dark'); darkModeToggle.checked=true;} 
+        else { document.documentElement.removeAttribute('data-theme'); darkModeToggle.checked=false;}
+        if(s.keepAwake){ keepAwake.checked=true; requestWakeLock();} 
+        else { keepAwake.checked=false; releaseWakeLock();}
     }catch(e){console.warn(e);} 
 }
+function updateModeUI() {
+    modeVoice.checked = voiceModeEnabled; modeClick.checked = !voiceModeEnabled;
+    if (voiceModeEnabled) {
+        document.getElementById('dart-center').style.opacity = '0';
+        document.getElementById('dart-center').style.pointerEvents = 'none';
+        scoreboardEl.classList.add('voice-mode');
+        micIcon.style.display = 'flex';
+        if(isGameStarted && score > 0) startSpeechRecognition();
+    } else {
+        document.getElementById('dart-center').style.opacity = '1';
+        document.getElementById('dart-center').style.pointerEvents = 'auto';
+        scoreboardEl.classList.remove('voice-mode');
+        micIcon.style.display = 'none'; 
+        stopSpeechRecognition(); 
+    }
+}
 function saveSettingsToStore(){ 
-    const obj={
-        soundAssign, 
-        darkMode: !!darkModeToggle.checked, 
-        keepAwake: !!keepAwake.checked
-    }; 
+    speechEnabled = speechToggle.checked; 
+    voiceModeEnabled = modeVoice.checked; 
+    const obj={ soundAssign, darkMode: !!darkModeToggle.checked, keepAwake: !!keepAwake.checked, speechEnabled: speechEnabled, voiceModeEnabled: voiceModeEnabled}; 
     localStorage.setItem('big20_settings', JSON.stringify(obj)); 
-    localStorage.setItem('big20_numPlayers', playerCountSelect.value);
-    localStorage.setItem('big20_p1Name', p1Input.value);
-    localStorage.setItem('big20_p2Name', p2Input.value);
 }
-
-// **********************************************
-// UI Logik (Angepasst für Multi-Player)
-// **********************************************
-function computeQualityDisplay(player){ 
-    if(player.throws===0) return 'Wurfqualität: –'; 
-    return 'Wurfqualität: '+Math.round(player.qualitySum/player.throws)+' %'; 
-}
-
 function updateUI(){ 
-    const p = players[currentPlayerIndex];
-
-    // Aktueller Spieler-Score und Name (Muss immer auf P1 Score Box projiziert werden, wenn SP-Modus)
-    // In MP-Modus: restBig zeigt den Score des *aktiven* Spielers (P1 oder P2)
-    restBig.textContent = players[0].score; // P1 Score
-    p2RestBig.textContent = isMultiplayer ? players[1].score : ''; // P2 Score
-
-    // Statistik-Anzeige (gilt immer für den aktiven Spieler)
-    summary.textContent = `Treffer: ${p.hits} von ${p.throws}`; 
-    qualityVal.textContent = computeQualityDisplay(p); 
-    
-    // Aktiver Spieler-Highlight
-    p1ScoreBox.classList.toggle('active', currentPlayerIndex === 0);
-    p2ScoreBox.classList.toggle('active', isMultiplayer && currentPlayerIndex === 1);
-
+    restBig.textContent=score; 
+    // Im 301 Modus zeigen wir nur Punkte an, keine Big-20 Treffer-Zählung
+    if (activeGameMode === 'big20') {
+      summary.textContent='Treffer: '+hits+' von '+throws; 
+      qualityVal.textContent=computeQualityDisplay(); 
+    } else {
+      // In 301: Zeige die letzten 3 Würfe (letzte Aufnahme)
+      const arr = lastThree.slice(-3);
+      const lastRoundTotal = arr.reduce((sum, x) => sum + (x.points || 0), 0);
+      summary.textContent='Letzte Aufnahme: '+lastRoundTotal; 
+      qualityVal.textContent='Würfe: '+throws; 
+    }
     updateHighscoreUI(); 
-    updateButtonStates(); 
+    updateModeUI(); 
 } 
+function computeQualityDisplay(){ if(throws===0) return 'Wurfqualität: –'; return 'Wurfqualität: '+Math.round(qualitySum/throws)+' %'; }
+function flashVisual(el,hit){ el.classList.remove('flash-green','flash-red'); void el.offsetWidth; el.classList.add(hit?'flash-green':'flash-red'); setTimeout(()=>{ el.classList.remove('flash-green','flash-red'); },460); }
+// ... (Rest der Hilfsfunktionen wie playBuzz, buildSoundUI, playSound, speak, cleanSpoken, etc.) ...
+function playBuzz(){
+  try {
+    const osc  = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 400; 
+    gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.18, audioCtx.currentTime + 0.005);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.18);
+    osc.stop(audioCtx.currentTime + 0.21);
+  } catch(e) { console.warn('buzz audio err',e); }
+}
+function buildSoundUI(){ soundGrid.innerHTML=''; soundPresets.forEach((s,i)=>{ const b=document.createElement('button'); b.className='soundBtn'; b.textContent=s.name; b.onclick=()=>playSound(i); soundGrid.appendChild(b); [sTriple,sDouble,sSingle,sBullseye,sBull,sZero].forEach(sel=>{ const opt=document.createElement('option'); opt.value=i; opt.textContent=s.name; sel.appendChild(opt); }); }); sTriple.value=soundAssign.Triple; sDouble.value=soundAssign.Double; sSingle.value=soundAssign.Single; sBullseye.value=soundAssign.Bullseye; sBull.value=soundAssign.Bull; sZero.value=soundAssign.Zero; }
+function playSound(index){ try{ const p=soundPresets[index]; if(!p) return; const o=audioCtx.createOscillator(); const g=audioCtx.createGain(); o.type=p.type; o.frequency.value=p.freq; g.gain.value=0.0001; o.connect(g); g.connect(audioCtx.destination); const now=audioCtx.currentTime; g.gain.setValueAtTime(0.0001,now); g.gain.exponentialRampToValueAtTime(0.18, now+0.005); o.start(now); g.gain.exponentialRampToValueAtTime(0.0001, now+0.18); o.stop(now+0.21); }catch(e){console.warn('audio err',e);} }
+function chooseGermanVoice(){ if(typeof speechSynthesis==='undefined') return null; const voices=speechSynthesis.getVoices(); const maleNames=/(Markus|Michael|Thomas|Peter|Hans|Jan|Mark|David|Daniel|Andreas|Mann|Male|Herr)/i; let v=voices.find(x=>x.lang&&x.lang.startsWith('de')&&maleNames.test(x.name)); if(!v) v=voices.find(x=>x.lang&&x.lang.startsWith('de')); return v||null; }
+function speak(text){ if(!speechEnabled||typeof speechSynthesis==='undefined') return; try{ const v=chooseGermanVoice(); const msg=new SpeechSynthesisUtterance(text); if(v) msg.voice=v; msg.lang='de-DE'; msg.rate=1; msg.pitch=1; speechSynthesis.cancel(); speechSynthesis.speak(msg); }catch(e){console.warn('speech',e);} }
+function cleanSpoken(s){ let out=s.replace(/–/g,' | '); out = out.replace(/minus\s*/ig,' '); return out; }
+function requestWakeLock(){ try{ if('wakeLock' in navigator){ navigator.wakeLock.request('screen').then(wl=>{ wakeLock=wl; wl.addEventListener('release',()=>{ wakeLock=null; }); }).catch(e=>console.warn('wake lock request failed',e)); } }catch(e){console.warn(e);} }
+function releaseWakeLock(){ try{ if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; } }catch(e){console.warn(e);} }
+if(typeof speechSynthesis!=='undefined'){ speechSynthesis.onvoiceschanged = ()=>{}; }
+function getTopThreeSectors(counts) {const sectorArray = Object.keys(counts).map(key => ({label: key === 'Zero' ? '0' : key.replace(/Triple|Double|Single/, (m) => {if(m === 'Triple') return 'Triple-20';if(m === 'Double') return 'Doppel-20';if(m === 'Single') return '20'; return m;}),count: counts[key]}));sectorArray.sort((a, b) => b.count - a.count);const topThree = sectorArray.slice(0, 3).filter(s => s.count > 0);if (topThree.length === 0) return '– | – | –';const labels = topThree.map(s => s.label);while (labels.length < 3) {labels.push('–');}return labels.join(' | ');}
+function loadHighscore(){try{const hs = JSON.parse(localStorage.getItem('big20_highscore') || '{}');highscore = { quality: 0, hits: 0, throws: 0, avgQ: '– %', topThreeSectors: '– | – | –' };if (hs.quality !== undefined && (parseInt(hs.quality) > 0 || parseInt(hs.hits) > 0)) {highscore.quality = parseInt(hs.quality) || 0;highscore.hits = parseInt(hs.hits) || 0;highscore.throws = parseInt(hs.throws) || 0;highscore.avgQ = hs.avgQ || '– %';highscore.topThreeSectors = hs.topThreeSectors || '– | – | –';}} catch(e) {console.warn('Highscore konnte nicht geladen werden', e);}updateHighscoreUI();}
+function saveHighscore(finalQuality, finalHits, finalThrows, finalAvgString){const topThreeSectorsString = getTopThreeSectors(sectorCounts);if (finalQuality > highscore.quality || (highscore.quality === 0 && finalQuality > 0)) {highscore.quality = finalQuality;highscore.hits = finalHits;highscore.throws = finalThrows;highscore.avgQ = finalAvgString;highscore.topThreeSectors = topThreeSectorsString;localStorage.setItem('big20_highscore', JSON.stringify(highscore));updateHighscoreUI();return true;}return false;}
+function updateHighscoreUI(){const quality = highscore.quality || 0;const hits = highscore.hits || 0;const throws = highscore.throws || 0;const topThree = highscore.topThreeSectors || '– | – | –';
+    // Zeige den Highscore nur im Big-20 Modus
+    if (activeGameMode === 'big20') {
+      highscoreEl.style.display = 'block';
+      highscoreEl.innerHTML = `Highscore: ${quality} % | ${hits} Treffer von ${throws} <br> Top 3: ${topThree}`;
+    } else {
+      highscoreEl.style.display = 'none';
+    }
+}
+function resetAllData() {if (confirm('Sind Sie sicher, dass Sie den gespeicherten Highscore löschen möchten?')) {localStorage.removeItem('big20_highscore');loadHighscore();alert('Der Highscore wurde gelöscht.');document.getElementById('modalShade').style.display='none'; document.getElementById('modalShade').setAttribute('aria-hidden','true');}}
 
-function updateButtonStates() {
-    const p = players[currentPlayerIndex];
-    const buttons = board.querySelectorAll('.btn');
-    // Board komplett ausblenden, wenn Spiel beendet oder in Pause
-    board.style.display = (p.score === 0 || inPause) ? 'none' : 'flex';
+// **********************************************
+// HAUPT-SPIELLOGIK (Erweitert für 301)
+// **********************************************
+
+function scoring(points, label, assignKey){ 
+  if (roundThrows === 0) { resultOverlay.style.display = 'none'; }
+  
+  throws++; roundThrows++; 
+  
+  if(activeGameMode === 'big20'){
+    // BIG-20 Logik: Treffer zählen und Qualität berechnen
+    const potential = score - points; 
+    const bust = (potential < 0); 
     
-    if (p.score === 0 || inPause) return;
+    if(bust){ 
+      qualitySum += qualityMap[0]; 
+      lastThree.push({label:label,points:0,q:0}); 
+      if(lastThree.length>3) lastThree.shift(); 
+      updateUI(); return;
+    } 
+    
+    if(points>0) hits++; 
+    score = potential; 
+    let q = (qualityMap[points]!==undefined)? qualityMap[points]:0; 
+    if(score===0) q=100; 
+    qualitySum += q; 
+    if(sectorCounts.hasOwnProperty(assignKey)) sectorCounts[assignKey]++;
+    lastThree.push({label:label,points:points,q: Math.round(q)}); 
+    if(lastThree.length>3) lastThree.shift(); 
+    
+  } else if (activeGameMode === '301') {
+    // 301 Logik: Nur Score abziehen, kein Treffer-Zähler, kein Bust
+    const potential = score - points;
+    
+    if (potential === 0) { // Check Out
+      score = 0;
+    } else if (potential < 0 || potential === 1) { // Check Bust (Unter 0 oder genau 1)
+      score = score; // Score bleibt gleich (Bust)
+      points = 0;
+    } else {
+      score = potential;
+    }
 
-    buttons.forEach(btn => {
-        const points = parseInt(btn.getAttribute('data-points'));
-        let disabled = false;
+    // Für die 301-Anzeige im Summary benötigen wir nur die letzten 3 Würfe.
+    lastThree.push({ label: label, points: points });
+    if (lastThree.length > 3) lastThree.shift();
+  }
+
+  updateUI(); 
+  
+  if(score===0){ 
+    renderBoard(); 
+    announceEnd(); 
+    return; 
+  } 
+  if (!voiceModeEnabled) checkPause();
+}
+
+
+function renderBoard(){ 
+    board.innerHTML=''; 
+    
+    // Standard-Klasse entfernen
+    board.classList.remove('grid-5x5');
+    
+    // Inline Styles für Big-20 (Flexbox) oder 301 (Grid) setzen
+    if(activeGameMode === 'big20'){
+        board.style.flexDirection = 'row'; 
+        board.style.justifyContent = 'center'; 
+        board.style.gap = '2.5rem'; 
+        board.style.display = 'flex';
+    } else if (activeGameMode === '301') {
+        // FIX: Lösche alle Flexbox-spezifischen Inline-Styles, damit das CSS Grid greift
+        board.style.flexDirection = ''; 
+        board.style.justifyContent = ''; 
+        board.style.gap = ''; 
+        board.style.display = ''; 
+    }
+
+    if (inPause) {
+        document.getElementById('dart-center').style.opacity = '0';
+        return;
+    }
+    
+    document.getElementById('dart-center').style.opacity = '1';
+    
+    if(score===0){ return; } 
+    
+    if (voiceModeEnabled) {
+        // FÜR VOICE MODE: Display auf flex setzen für die Anzeige
+        board.style.display = 'flex';
+        board.innerHTML = `<div class="endcard" style="opacity:0.8; margin:0;">
+                           ${activeGameMode === 'big20' ? 
+                               'Sagen Sie "plus [Wert] [Wert] [Wert]" (z.B. "plus 60 40 0").' :
+                               'Spracheingabe im 301-Modus noch nicht implementiert.'}
+                           </div>`;
+        return;
+    }
+
+    // Click Mode Logic
+    
+    if(activeGameMode === 'big20'){
+        renderBoardBig20(score);
+    } else if (activeGameMode === '301') {
+        renderBoard301(score);
+    }
+}
+
+
+function renderBoardBig20(s){
+    // [Bisherige Big-20 Logik]
+    if(s<20){ 
+        renderUnder20Centered(s); 
+        return; 
+    } 
+    const tripleDis=(s<=59), beDis=(s<=49), doubleDis=(s<=39), bullDis=(s<=24); 
+    const left=document.createElement('div'); left.className='col left'; 
+    const right=document.createElement('div'); right.className='col right'; 
+    
+    const leftBtns=[{t:'Triple‑20',v:60,d:tripleDis,assign:'Triple'},{t:'Doppel‑20',v:40,d:doubleDis,assign:'Double'},{t:'Single‑20',v:20,d:false,assign:'Single'}]; 
+    const rightBtns=[{t:'Bulls Eye',v:50,d:beDis,assign:'Bullseye'},{t:'Bull',v:25,d:bullDis,assign:'Bull'},{t:'0',v:0,d:false,assign:'Zero'}];
+    
+    leftBtns.forEach(b=>{ 
+        const el=document.createElement('button'); 
+        el.className='dart-btn'; 
+        el.textContent=b.t; 
+        el.disabled=b.d; 
+        el.onclick=()=>handleClick(el,b.v,b.t,b.assign); 
+        left.appendChild(el); 
+    }); 
+    rightBtns.forEach(b=>{ 
+        const el=document.createElement('button'); 
+        el.className='dart-btn'; 
+        el.textContent=b.t; 
+        el.disabled=b.d; 
+        el.onclick=()=>handleClick(el,b.v,b.t,b.assign); 
+        right.appendChild(el); 
+    }); 
+    board.appendChild(left); 
+    board.appendChild(right);
+}
+
+function renderUnder20Centered(s){ 
+    board.innerHTML=''; 
+    board.style.flexDirection = 'column'; 
+    board.style.alignItems = 'center';
+    board.style.gap = '8px';
+    
+    const col=document.createElement('div'); 
+    col.className='col-auto';
+    col.style.alignItems = 'center';
+
+    function add(label,val,assign){ 
+        const b=document.createElement('button'); 
+        b.className='dart-btn'; 
+        b.textContent=label; 
+        b.onclick=()=>handleClick(b,val,label,assign); 
+        col.appendChild(b); 
+    } 
+    // [ ... Bisherige low-score Logik ...]
+    if(s===19) add('19',19,'Single'); 
+    else if(s===18){ add('Triple-6',18,'Triple'); add('Doppel-9',18,'Double'); add('18',18,'Single'); } 
+    else if(s===17) add('17',17,'Single'); 
+    else if(s===16){ add('Doppel-8',16,'Double'); add('16',16,'Single'); } 
+    else if(s===15){ add('Triple-5',15,'Triple'); add('15',15,'Single'); } 
+    else if(s===14){ add('Doppel-7',14,'Double'); add('14',14,'Single'); } 
+    else if(s===13) add('13',13,'Single'); 
+    else if(s===12){ add('Triple-4',12,'Triple'); add('Doppel-6',12,'Double'); add('12',12,'Single'); } 
+    else if(s===11) add('11',11,'Single'); 
+    else if(s===10){ add('Doppel-5',10,'Double'); add('10',10,'Single'); } 
+    else if(s===9){ add('Triple-3',9,'Triple'); add('9',9,'Single'); } 
+    else if(s===8){ add('Doppel-4',8,'Double'); add('8',8,'Single'); } 
+    else if(s===7) add('7',7,'Single'); 
+    else if(s===6){ add('Triple-2',6,'Triple'); add('Doppel-3',6,'Double'); add('6',6,'Single'); } 
+    else if(s===5) add('5',5,'Single'); 
+    else if(s===4){ add('Doppel-2',4,'Double'); add('4',4,'Single'); } 
+    else if(s===3){ add('Triple-1',3,'Triple'); add('3',3,'Single'); } 
+    else if(s===2){ add('Doppel-1',2,'Double'); add('2',2,'Single'); } 
+    else if(s===1) add('1',1,'Single'); 
+    
+    add('0',0,'Zero'); 
+    board.appendChild(col); 
+}
+
+// NEUE Funktion: 301 Board rendern
+function renderBoard301(s) {
+    board.classList.add('grid-5x5');
+    
+    // Die 5x5 Matrix (Zeilenweise)
+    const buttonMatrix = [
+        // Spalte 1: 1-5
+        {t: '1', v: 1, assign: 'Single'}, {t: '2', v: 2, assign: 'Single'}, {t: '3', v: 3, assign: 'Single'}, 
+        {t: '4', v: 4, assign: 'Single'}, {t: '5', v: 5, assign: 'Single'},
         
-        if (points > 0) {
-            const potential = p.score - points;
-            // BUST-Kriterium: Der Rest ist 1 oder negativ (außer er ist genau 0)
-            if (potential <= 1 && potential !== 0) {
-                disabled = true;
-            }
-            if (points > p.score) {
-                disabled = true;
+        // Spalte 2: 6-10
+        {t: '6', v: 6, assign: 'Single'}, {t: '7', v: 7, assign: 'Single'}, {t: '8', v: 8, assign: 'Single'}, 
+        {t: '9', v: 9, assign: 'Single'}, {t: '10', v: 10, assign: 'Single'},
+
+        // Spalte 3: 11-15
+        {t: '11', v: 11, assign: 'Single'}, {t: '12', v: 12, assign: 'Single'}, {t: '13', v: 13, assign: 'Single'}, 
+        {t: '14', v: 14, assign: 'Single'}, {t: '15', v: 15, assign: 'Single'},
+
+        // Spalte 4: 16-20
+        {t: '16', v: 16, assign: 'Single'}, {t: '17', v: 17, assign: 'Single'}, {t: '18', v: 18, assign: 'Single'}, 
+        {t: '19', v: 19, assign: 'Single'}, {t: '20', v: 20, assign: 'Single'},
+
+        // Spalte 5: Sonderfelder
+        {t: 'BE', v: 50, assign: 'Bullseye'}, 
+        {t: 'B', v: 25, assign: 'Bull'}, 
+        {t: 'T-', v: null, assign: 'Triple'}, 
+        {t: 'D-', v: null, assign: 'Double'}, 
+        {t: '0', v: 0, assign: 'Zero'}
+    ];
+
+    buttonMatrix.forEach(b => {
+        const el = document.createElement('button');
+        el.className = 'dart-btn';
+        el.textContent = b.t;
+        el.dataset.points = b.v;
+        el.dataset.assign = b.assign;
+        
+        // Deaktivierung für Multiplikator-Auswahl, wenn Score zu niedrig ist
+        const maxScoreNeeded = multiplierMode === 'Triple' ? 20 : (multiplierMode === 'Double' ? 40 : 60);
+        
+        if (b.v !== null) {
+             // Normale Zahl
+             el.onclick = () => handleClick301(el, b.v, b.t, b.assign, 1);
+        } else {
+             // Multiplikator-Taste (T- oder D-)
+             el.onclick = () => toggleMultiplierMode(el, b.assign);
+        }
+        
+        // Multiplikator Tasten sind standardmäßig aktiviert, wenn kein Modus aktiv ist
+        if (b.t === 'T-' || b.t === 'D-') {
+            if (multiplierMode !== null) {
+                 el.disabled = el.textContent !== multiplierMode[0] + '-'; // Deaktiviere T- wenn D- aktiv
+                 if (el.textContent === multiplierMode[0] + '-') {
+                     el.classList.add('active-multiplier');
+                 }
             }
         }
         
-        if (points === 0) {
-            disabled = false;
+        // Deaktiviere Zahlen, wenn Multiplikator aktiv ist ODER wenn Multiplikator nötig ist, um nicht zu überwerfen
+        if (multiplierMode !== null) {
+            if (b.v !== null) { // Ist eine Zahl
+                let multiplier = (multiplierMode === 'Triple') ? 3 : 2;
+                el.disabled = (score - (b.v * multiplier) < 0 && score !== (b.v * multiplier) - 1); // Kann nicht auf 1 oder darunter kommen
+            } else if (b.t === 'BE' || b.t === 'B') {
+                el.disabled = true; // Bull/Bullseye können nicht multipliziert werden
+            }
+        } else if (b.v !== null) {
+            // Normale 301 Bust-Regel: Verhindern, dass man unter Null oder genau auf Eins wirft
+            if (s - b.v < 0 || s - b.v === 1) {
+                el.disabled = true;
+            }
         }
-
-        btn.disabled = disabled;
+        
+        board.appendChild(el);
     });
 }
 
-// **********************************************
-// Kern-Spiellogik (Angepasst für Multi-Player)
-// **********************************************
-
-function handleClick(btnEl, points, label, assignKey) {
-  const p = players[currentPlayerIndex];
-  if (inPause || p.score === 0) return;
-
-  // 1. Visuelles Feedback (Flash)
-  const isHit = points > 0;
-  btnEl.style.transition = "background-color 0.15s ease";
-  btnEl.style.backgroundColor = isHit ? "rgba(0,255,0,0.6)" : "rgba(255,0,0,0.6)";
-  setTimeout(() => { btnEl.style.backgroundColor = ""; }, 200);
-  if (navigator.vibrate) navigator.vibrate(30);
-  // flashVisual(btnEl, isHit); // Flash Visual entfernt, da es in der Originalversion nicht vorhanden war und zu Konflikten führen kann.
-
-  // 2. Sound
-  const idx = soundAssign[assignKey] !== undefined ? soundAssign[assignKey] : 0;
-  playSound(idx);
-
-  // 3. Scoring
-  scoring(points, label, assignKey);
+function toggleMultiplierMode(btnEl, mode) {
+    if (btnEl.classList.contains('active-multiplier')) {
+        // Modus deaktivieren
+        multiplierMode = null;
+        btnEl.classList.remove('active-multiplier');
+        btnEl.disabled = false;
+    } else {
+        // Modus aktivieren
+        multiplierMode = mode;
+        btnEl.classList.add('active-multiplier');
+    }
+    
+    // Board neu rendern, um die Deaktivierung/Aktivierung der anderen Tasten anzuzeigen
+    renderBoard();
 }
 
-function flashVisual(el,hit){ el.classList.remove('flash-green','flash-red'); void el.offsetWidth; el.classList.add(hit?'flash-green':'flash-red'); setTimeout(()=>{ el.classList.remove('flash-green','flash-red'); },460); }
-function playSound(index){ try{ const p=soundPresets[index]; if(!p) return; const o=audioCtx.createOscillator(); const g=audioCtx.createGain(); o.type=p.type; o.frequency.value=p.freq; g.gain.value=0.0001; o.connect(g); g.connect(audioCtx.destination); const now=audioCtx.currentTime; g.gain.setValueAtTime(0.0001,now); g.gain.exponentialRampToValueAtTime(0.18, now+0.005); o.start(now); g.gain.exponentialRampToValueAtTime(0.0001, now+0.18); o.stop(now+0.21); }catch(e){console.warn('audio err',e);} }
 
+function handleClick(btnEl, points, label, assignKey) {
+    // Diese Funktion wird nur für Big-20 verwendet (Abwärtskompatibilität)
+    if (inPause) return;
+    const isHit = points > 0;
+    const vibType = isHit ? (assignKey === 'Triple' ? 'triple' : (assignKey === 'Double' ? 'double' : 'single')) : 'miss';
+    const vibMap = {
+        single: [30], double: [30,100,30], triple: [30,100,30,100,30], miss: [50]               
+    };
+    if (navigator.vibrate && vibMap[vibType].length) { navigator.vibrate(vibMap[vibType]); }
+    if (vibType === 'miss') { playBuzz(); }
+    flashVisual(btnEl, isHit);
+    const idx = soundAssign[assignKey] !== undefined ? soundAssign[assignKey] : 0;
+    playSound(idx);
+    scoring(points, label, assignKey);
+}
 
-function scoring(points,label,assignKey){ 
-  const p = players[currentPlayerIndex];
-  
-  if (p.roundThrows === 0) { 
-      resultOverlay.classList.remove('show', 'floating');
-      p.scoreBeforeBust = p.score; // Speichere Score für möglichen Bust
-  }
-
-  p.throws++; 
-  p.roundThrows++; 
-  
-  if(p.sectorCounts.hasOwnProperty(assignKey) && points > 0){
-      p.sectorCounts[assignKey]++;
-  }
-
-  const potential = p.score - points; 
-  const bust = (potential < 0 || potential === 1); // BUST condition: < 0 OR = 1
-  
-  if(bust){ 
-    // **BUST-Handling**
-    p.qualitySum += qualityMap[0]; 
-    p.lastThree.push({label:label + ' (BUST)',points:0,q:0}); 
-    if(p.lastThree.length>3) p.lastThree.shift(); 
-    p.score = p.scoreBeforeBust; 
+// NEUE Funktion: Klick-Handler für 301
+function handleClick301(btnEl, baseValue, label, assignKey, defaultMultiplier) {
+    if (inPause) return;
     
-    // Runde ist vorbei (forcierter Wechsel)
-    p.roundThrows = 3; 
+    let multiplier = defaultMultiplier;
+    let finalPoints = baseValue;
+    let finalLabel = label;
+    let finalAssignKey = assignKey;
     
-    updateUI(); 
-    checkPause(); 
-    return; 
-  } 
-  
-  // **REGULAR HIT/MISS**
-  p.score = potential; 
-  if(points>0) p.hits++; 
-  
-  let q = (qualityMap[points]!==undefined)? qualityMap[points]:0; 
-  if(p.score===0) q=100; // 100% quality for a checkout
-  p.qualitySum += q; 
-  p.lastThree.push({label:label,points:points,q: Math.round(q)}); 
-  if(p.lastThree.length>3) p.lastThree.shift(); 
-  
-  updateUI(); 
-  
-  if(p.score===0){ 
-    updateButtonStates(); // Board ausblenden
-    announceEnd(p); 
-    return;
-  }
-  
-  checkPause(); 
+    // Multiplikator anwenden, falls aktiv
+    if (multiplierMode === 'Triple') {
+        multiplier = 3;
+        finalPoints = baseValue * 3;
+        finalLabel = 'T-' + label;
+        finalAssignKey = 'Triple';
+    } else if (multiplierMode === 'Double') {
+        multiplier = 2;
+        finalPoints = baseValue * 2;
+        finalLabel = 'D-' + label;
+        finalAssignKey = 'Double';
+    }
+
+    // Bust Check (nur in 301 nötig, da Big-20 Buttons bereits deaktiviert sind)
+    const potentialScore = score - finalPoints;
+    let isBust = potentialScore < 0 || potentialScore === 1; // 301 Bust-Regel: Unter 0 oder genau 1
+    
+    // Für Multiplikator-Tasten den Modus zurücksetzen
+    if (multiplierMode !== null) {
+        if (baseValue === 0) { // Eine Null mit aktivem Multiplier wird als 0 gewertet, aber beendet den Modus nicht
+             isBust = false; // Null ist nie ein Bust
+        } else {
+             // Modus nur zurücksetzen, wenn es sich um einen gültigen numerischen Wurf handelt (nicht T- oder D-)
+             if (!isBust) { 
+                multiplierMode = null;
+             }
+        }
+    }
+
+    if (isBust) {
+        finalPoints = 0; // Kein Punktabzug, da Bust
+        finalLabel = 'BUST';
+        finalAssignKey = 'Zero';
+        multiplierMode = null; // Bust setzt Multiplikator immer zurück
+    }
+    
+    const isHit = finalPoints > 0;
+
+    // Haptik und Sound
+    const vibType = isHit ? (finalAssignKey === 'Triple' ? 'triple' : (finalAssignKey === 'Double' ? 'double' : 'single')) : 'miss';
+    const vibMap = { single: [30], double: [30,100,30], triple: [30,100,30,100,30], miss: [50] };
+    if (navigator.vibrate && vibMap[vibType].length) { navigator.vibrate(vibMap[vibType]); }
+    if (vibType === 'miss') { playBuzz(); }
+    
+    // Visuelles Feedback
+    flashVisual(btnEl, isHit);
+    const soundKey = finalAssignKey in soundAssign ? finalAssignKey : 'Zero';
+    const idx = soundAssign[soundKey] !== undefined ? soundAssign[soundKey] : 0;
+    playSound(idx);
+    
+    // Scoring ausführen
+    scoring(finalPoints, finalLabel, finalAssignKey);
+    
+    // UI neu rendern, falls der Multiplikator-Modus zurückgesetzt wurde
+    if (multiplierMode === null) {
+        renderBoard();
+    }
 }
 
 function checkPause(){ 
-    const p = players[currentPlayerIndex];
-    if(p.roundThrows>=3){ 
-        p.roundThrows=0; 
-        
-        if (isMultiplayer) {
-            // Spieler wechseln
-            currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
-            playerSwitchText.textContent = `Nächster Spieler: ${players[currentPlayerIndex].name}`;
-        } else {
-            // Im Single-Player-Modus bleibt der Text leer
-            playerSwitchText.textContent = '';
-        }
-        
+    if(roundThrows>=3){ 
+        roundThrows=0; 
         startPause(); 
+    } else { 
+        renderBoard(); 
     } 
 }
-
 function startPause(){ 
   inPause=true; 
-  const p = players[currentPlayerIndex]; // Der Spieler, der gerade geworfen hat
-
-  // 1. Pause Layer (Hintergrund und Countdown) anzeigen
   pauseLayer.style.display='flex'; 
   pauseLayer.setAttribute('aria-hidden','false'); 
-  
-  const arr=p.lastThree.slice(-3); 
+  renderBoard();
+
+  const arr=lastThree.slice(-3); 
   const totalPoints = arr.reduce((sum, x) => sum + (x.points || 0), 0);
-  const roundHits = arr.filter(x => x.points > 0).length;
-  const avg = arr.length>0? Math.round(arr.reduce((s,x)=>s+(x.q||0),0)/arr.length):0; 
-  const scoreColor = (totalPoints>0 && arr.some(x => x.label.includes('(BUST)') === false)) ? 'var(--good)' : 'var(--bad)';
+  const scoreColor = (totalPoints>0)?'var(--good)':'var(--bad)';
   
-  // 2. Persistent Overlay direkt im Floating Zustand anzeigen (zeigt die Ergebnisse des letzten Werfers)
-  resultOverlay.innerHTML = `
-    <div style="text-align: left;">
-        <div style="color: var(--muted); font-size: 14px;">${p.name}'s letzter Wurf</div>
-        <div style="font-size: 44px; font-weight: 900; color: ${scoreColor}; margin: 6px 0;">${totalPoints}</div>
-    </div>
-    <div style="text-align:right;">
-        <div style="display: block; font-size: 13px; font-weight: 500; margin-top: 4px; color: var(--muted);">${roundHits} Treffer</div>
-        <div style="font-size: 20px; font-weight: 800; margin-top: 6px;">Wurfqualität: ${avg} %</div>
-    </div>
-  `;
-  resultOverlay.classList.remove('show');
-  resultOverlay.classList.add('floating');
+  // Im 301 Modus zeigen wir nur die letzte Aufnahme an
+  let overlayContent;
+  if (activeGameMode === 'big20') {
+      const roundHits = arr.filter(x => x.points > 0).length;
+      const avg = arr.length>0? Math.round(arr.reduce((s,x)=>s+(x.q||0),0)/arr.length):0; 
+      overlayContent = `
+        <div><div style="font-size: 14px; font-weight: 500; color: var(--muted);">Letzte Aufnahme</div>
+        <div style="font-size: 44px; font-weight: 900; color: ${scoreColor}; margin: 6px 0;">${totalPoints}</div></div>
+        <div style="text-align:right;"><div style="display: block; font-size: 13px; font-weight: 500; margin-top: 4px; color: var(--muted);">${roundHits} Treffer</div>
+        <div style="font-size: 20px; font-weight: 800; margin-top: 6px;">Q: ${avg} %</div></div>
+      `;
+      if(speechEnabled){ 
+        const spoken = `${totalPoints} Punkte, Scorewert ${avg} Prozent. Rest ${score}`; 
+        speak(cleanSpoken(spoken)); 
+      } 
+  } else {
+      overlayContent = `
+        <div><div style="font-size: 14px; font-weight: 500; color: var(--muted);">Letzte Aufnahme (301)</div>
+        <div style="font-size: 44px; font-weight: 900; color: ${scoreColor}; margin: 6px 0;">${totalPoints}</div></div>
+        <div style="text-align:right;"><div style="font-size: 20px; font-weight: 800; margin-top: 6px;">Rest: ${score}</div></div>
+      `;
+      if(speechEnabled){ 
+        const spoken = `${totalPoints} Punkte. Rest ${score}`; 
+        speak(cleanSpoken(spoken)); 
+      } 
+  }
+
+  resultOverlay.innerHTML = overlayContent;
+  resultOverlay.style.display = 'flex';
+  resultOverlay.classList.add('show');
   
   let t=5; 
   pauseCount.textContent=t; 
@@ -745,165 +1226,141 @@ function startPause(){
 
 function endPause(){ 
     inPause=false; 
+    multiplierMode = null; // Sicherstellen, dass der Modus zurückgesetzt ist
     
-    // Box wird JETZT in die finale (obere) Position animiert
-    resultOverlay.classList.remove('floating'); 
-    resultOverlay.classList.add('show');       
+    resultOverlay.classList.remove('show'); 
+    setTimeout(() => { resultOverlay.style.display = 'none'; }, 400);
 
-    // Pause Layer (Hintergrund und Countdown) ausblenden
     pauseLayer.style.display='none'; 
     pauseLayer.setAttribute('aria-hidden','true');
     
-    // UI aktualisieren, um den neuen aktiven Spieler anzuzeigen
-    updateUI(); 
+    renderBoard(); 
 }
 
-function announceEnd(winner){ 
-    const finalAvg = winner.throws>0?Math.round(winner.qualitySum/winner.throws):0; 
-    const finalHits = winner.hits;
-    const finalThrows = winner.throws;
-    const finalAvgStr = finalAvg + ' %';
+function announceEnd(){ 
+    stopSpeechRecognition();
     
-    // Highscore nur im Single-Player Modus speichern
-    let isNewHighscore = false;
-    if (!isMultiplayer) {
-        isNewHighscore = saveHighscore(finalAvg, finalHits, finalThrows, finalAvgStr, winner.sectorCounts);
-    }
-
+    isGameStarted = false;
     pauseLayer.style.display='none'; 
-    pauseLayer.setAttribute('aria-hidden','true'); 
-    resultOverlay.classList.remove('show', 'floating'); 
+    resultOverlay.style.display = 'none';
 
+    document.getElementById('dart-center').style.opacity = '0';
+    
     const card=document.createElement('div'); 
     card.className='endcard'; 
     
-    let endMessage = `🎯 <b>SPIELENDE!</b> ${winner.name} hat ausgecheckt.`;
-    
-    if (!isMultiplayer) {
-        endMessage = `🎯 <b>Spiel beendet!</b>`;
+    if (activeGameMode === 'big20') {
+      const finalAvg = throws>0?Math.round(qualitySum/throws):0; 
+      const finalHits = hits;
+      const finalThrows = throws;
+      const finalAvgStr = finalAvg + ' %';
+      const isNewHighscore = saveHighscore(finalAvg, finalHits, finalThrows, finalAvgStr);
+      card.innerHTML = `🎯 <b>Big-20 beendet!</b><br><br>${finalHits} Treffer von ${finalThrows} Würfen<br>Wurfqualität: ${finalAvg} %`;
+      if (isNewHighscore) { card.innerHTML += '<br><br>🎉 **NEUER HIGHSCORE!**'; }
+      speak(cleanSpoken(`Spiel beendet. Treffer: ${finalHits} von ${finalThrows}. Wurfqualität: ${finalAvg} Prozent.`)); 
+      sectorCounts = {Triple: 0, Double: 0, Single: 0, Bullseye: 0, Bull: 0, Zero: 0};
+    } else if (activeGameMode === '301') {
+      card.innerHTML = `🏆 **301 gewonnen!**<br><br>Spiel beendet in ${throws} Würfen (${Math.ceil(throws/3)} Aufnahmen).`;
+      speak(cleanSpoken(`301 gewonnen. Spiel beendet in ${throws} Würfen.`));
     }
-    
-    card.innerHTML = `${endMessage}<br><br>${finalHits} Treffer von ${finalThrows} Würfen<br>Wurfqualität: ${finalAvg} %`;
-    
-    if (isNewHighscore) {
-        card.innerHTML += '<br><br>🎉 **NEUER HIGHSCORE!**';
-    }
-    
-    board.innerHTML = '';
-    board.style.display = 'flex'; 
-    board.appendChild(card); 
+
+    document.querySelector('main').appendChild(card); 
 }
 
+
 // **********************************************
-// Setup & Events (Unverändert/Angepasst)
+// EVENT HANDLER
 // **********************************************
-function newGame() {
-    const numPlayers = parseInt(playerCountSelect.value);
-    initializePlayers(numPlayers, p1Input.value, p2Input.value);
+function startGame(mode) {
+    activeGameMode = mode;
+    gameSelectionModal.style.display = 'none';
     
-    // Ensure the board is back to normal buttons
-    board.innerHTML = ''; 
-    board.appendChild(document.querySelector('.col:first-child').cloneNode(true));
-    board.appendChild(document.querySelector('.col:last-child').cloneNode(true));
-    
-    currentPlayerIndex = 0;
-    inPause = false; 
+    // Setze Score und Zähler basierend auf Modus
+    score=(mode === 'big20' ? 301 : 301); 
+    throws=0; hits=0; qualitySum=0; roundThrows=0; 
+    lastThree=[]; inPause=false; 
+    sectorCounts = {Triple: 0, Double: 0, Single: 0, Bullseye: 0, Bull: 0, Zero: 0}; 
+    multiplierMode = null; // Multiplikator immer zurücksetzen
     document.getElementById('pauseLayer').style.display='none'; 
-    resultOverlay.classList.remove('show', 'floating'); 
+    resultOverlay.style.display = 'none';
+    liveThrowFeedback.style.display = 'none'; 
+
+    isGameStarted = true;
+    stopSpeechRecognition(); 
     
+    const endcard = document.querySelector('.endcard');
+    if (endcard) endcard.remove(); 
+
+    if (voiceModeEnabled) { startSpeechRecognition(); } 
+    
+    document.querySelector('h1').textContent = (activeGameMode === 'big20') ? 'Big‑20 | Dart‑Trainer' : '301 | Regional Dart';
+
     updateUI(); 
-    updateButtonStates(); 
-    
-    // Close modal if game was started from settings
-    document.getElementById('modalShade').style.display='none'; 
-    document.getElementById('modalShade').setAttribute('aria-hidden','true'); 
+    renderBoard();
 }
 
-function resetAllData() {
-    if (confirm('Sind Sie sicher, dass Sie den gespeicherten Highscore löschen möchten?')) {
-        localStorage.removeItem('big20_highscore');
-        loadHighscore();
-        alert('Der Highscore wurde gelöscht.');
-        document.getElementById('modalShade').style.display='none'; 
-        document.getElementById('modalShade').setAttribute('aria-hidden','true'); 
-    }
-}
+document.getElementById('newGame').onclick = ()=>{ 
+    gameSelectionModal.style.display='flex';
+    gameSelectionModal.setAttribute('aria-hidden','false');
+};
 
-function buildSoundUI(){ 
-    // ... (Sound UI und Logic unverändert) ...
-    soundGrid.innerHTML=''; 
-    soundPresets.forEach((s,i)=>{ const b=document.createElement('button'); b.className='soundBtn'; b.textContent=s.name; b.onclick=()=>playSound(i); soundGrid.appendChild(b); [sTriple,sDouble,sSingle,sBullseye,sBull,sZero].forEach(sel=>{ const opt=document.createElement('option'); opt.value=i; opt.textContent=s.name; sel.appendChild(opt); }); }); 
-    sTriple.value=soundAssign.Triple; sDouble.value=soundAssign.Double; sSingle.value=soundAssign.Single; sBullseye.value=soundAssign.Bullseye; sBull.value=soundAssign.Bull; sZero.value=soundAssign.Zero; 
-}
-
-function requestWakeLock(){ try{ if('wakeLock' in navigator){ navigator.wakeLock.request('screen').then(wl=>{ wakeLock=wl; wl.addEventListener('release',()=>{ wakeLock=null; }); }).catch(e=>console.warn('wake lock request failed',e)); } }catch(e){console.warn(e);} }
-function releaseWakeLock(){ try{ if(wakeLock){ wakeLock.release().catch(()=>{}); wakeLock=null; } }catch(e){console.warn(e);} }
-
+document.querySelectorAll('.game-select-btn').forEach(btn => {
+    btn.onclick = () => {
+        if (!btn.disabled) {
+            startGame(btn.dataset.mode);
+        }
+    };
+});
 
 document.getElementById('saveSettings').onclick = ()=>{ 
-    soundAssign = {
-        Triple: parseInt(sTriple.value), Double: parseInt(sDouble.value), Single: parseInt(sSingle.value), 
-        Bullseye: parseInt(sBullseye.value), Bull: parseInt(sBull.value), Zero: parseInt(sZero.value)
-    }; 
-    
-    if(darkModeToggle.checked){
-        document.documentElement.setAttribute('data-theme','dark');
-    } else {
-        document.documentElement.removeAttribute('data-theme');
-    }
-
+    // [Speicherlogik]
+    soundAssign = { Triple: parseInt(sTriple.value), Double: parseInt(sDouble.value), Single: parseInt(sSingle.value), Bullseye: parseInt(sBullseye.value), Bull: parseInt(sBull.value), Zero: parseInt(sZero.value) }; 
+    if(darkModeToggle.checked){ document.documentElement.setAttribute('data-theme','dark'); } 
+    else { document.documentElement.removeAttribute('data-theme'); }
     if(keepAwake.checked) requestWakeLock(); else releaseWakeLock(); 
-    
+    voiceModeEnabled = modeVoice.checked; 
+    updateModeUI(); 
     saveSettingsToStore(); 
     document.getElementById('modalShade').style.display='none'; 
     document.getElementById('modalShade').setAttribute('aria-hidden','true'); 
+    renderBoard();
 };
 
 resetData.onclick = resetAllData;
-
 document.getElementById('gear').onclick = ()=>{ 
     readmePopover.style.display='none'; 
+    modeVoice.checked = voiceModeEnabled; modeClick.checked = !voiceModeEnabled;
     document.getElementById('modalShade').style.display='flex'; 
     document.getElementById('modalShade').setAttribute('aria-hidden','false'); 
 };
-
 dartIcon.onclick = (e) => {
     e.stopPropagation(); 
     document.getElementById('modalShade').style.display='none'; 
     document.getElementById('modalShade').setAttribute('aria-hidden','true');
-    
-    if (readmePopover.style.display === 'flex') {
-        readmePopover.style.display = 'none';
-        readmePopover.setAttribute('aria-hidden', 'true');
-    } else {
-        readmePopover.style.display = 'flex';
-        readmePopover.setAttribute('aria-hidden', 'false');
-    }
+    if (readmePopover.style.display === 'flex') { readmePopover.style.display = 'none'; readmePopover.setAttribute('aria-hidden', 'true'); } 
+    else { readmePopover.style.display = 'flex'; readmePopover.setAttribute('aria-hidden', 'false'); }
 };
-
-readmePopover.onclick = () => {
-    readmePopover.style.display = 'none';
-    readmePopover.setAttribute('aria-hidden', 'true');
+micIcon.onclick = (e) => {
+    e.stopPropagation(); 
+    if (!voiceModeEnabled) return; 
+    const endcard = document.querySelector('.endcard');
+    if (endcard) endcard.remove(); 
+    if (!isGameStarted || score === 0) { alert('Bitte starten Sie zuerst ein neues Spiel über den "Neues Spiel" Button.'); return; }
+    if (recognition && !isRecognizing) { startSpeechRecognition(); } 
+    else if (recognition && isRecognizing) { stopSpeechRecognition(); }
 };
-
-document.getElementById('closeSettings').onclick = ()=>{ 
-    document.getElementById('modalShade').style.display='none'; 
-    document.getElementById('modalShade').setAttribute('aria-hidden','true'); 
-    loadSettings(); 
-};
-
-document.getElementById('newGame').onclick = newGame;
-document.getElementById('startGameFromSettings').onclick = newGame;
+readmePopover.onclick = () => { readmePopover.style.display = 'none'; readmePopover.setAttribute('aria-hidden', 'true'); };
+document.getElementById('closeSettings').onclick = ()=>{ document.getElementById('modalShade').style.display='none'; document.getElementById('modalShade').setAttribute('aria-hidden','true'); loadSettings(); };
 
 
 // **********************************************
 // INITIALISIERUNG
 // **********************************************
+setupSpeechRecognition(); 
 buildSoundUI(); 
 loadHighscore(); 
 loadSettings(); 
-// Initiales Spiel starten
-newGame(); 
+renderBoard(); 
 </script>
 </body>
 </html>
